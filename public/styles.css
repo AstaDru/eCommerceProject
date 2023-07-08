@@ -1,0 +1,10 @@
+ul {
+    list-style-position: inside;
+    list-style-type: square;
+    display: block
+}
+.url {
+    background-color: #0002;
+    padding: 1px;
+    border-radius: 2px;
+}
