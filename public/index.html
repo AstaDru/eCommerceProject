@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Documentation</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <h1>Welcome to our E-commerce Shop api</h1>
+    <p>
+      <strong> ROUTES </strong>
+    </p>
+    <ul>
+      <li><span class='url'>/api/browse</span> - GET => list all items in shop </li>
+      <li><span class='url'>/api/register</span> - POST => create user account</li>
+      <li><span class='url'>/api/login</span> - POST => Login in user</li>
+
+      <li><span class='url'>/api/add_to_cart</span> - PUT (authenticated) => add item to cart using item_id</li>
+      <li><span class='url'>/api/remove_from_cart</span> - PUT (authenticated) => remove item from cart using item_id</li>
+      <li><span class='url'>/api/checkout</span> - POST (authenticated) => Push cart_items to order</li>
+      <li><span class='url'>/api/order</span> - GET (authenticated) => view all orders</li>
+      <li><span class='url'>/api/settings</span> - PUT (authenticated) => Change user attributes</li>
+    </ul>
+  </body>
+</html>
