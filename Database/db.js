@@ -1,4 +1,5 @@
 // CRUD on products db
+const { request, response } = require('express');
 const { Pool } = require('pg');
  const uuid  = require('uuid').v4;
 
@@ -12,20 +13,20 @@ const pool = new Pool({
     host: pgHOST,
     user: pgUSER,
     password: pgPASSWORD,
-    database: 'lorem',
+    database: 'shop',
     port: 5432
 });
 
 
 const createUser =  (request, response) => {
-    const {name, surname, email, password, postCode, building, street} = request.body;
+    const {name, surname, email, password} = request.body;
     const addressId = 7176;
     const command = 'INSERT INTO users (id, name, surname, email, password, address_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *';
     const values = [uuid(), name, surname, email, password, addressId];
 
     pool.query(command, values, (err, results) => {
         if (!err) {
-            response.json({...results.rows[0]});
+            response.json({message: "User Created", ...results.rows[0]});
         } else {
             response.status(400).json({message: err.message,  ...err})
         }
@@ -36,25 +37,58 @@ const getUserByEmail = (request, response) => {
     // get user by email from users and compare password for auth
     const { email, password } = request.body;
     pool.query('SELECT * FROM users WHERE email = $1', [email], (err, results) => {
-        const dbPassword = results.rows[0].password || false;
+        // error
         if (err) {
-            response.status(404).json({message: err.message,  ...err})
+            return response.status(404).json({message: err.message,  ...err})
         }
-        else if(dbPassword === password) {
+        //user not found
+        if (results.rows.length == 0) {
+            return response.status(404).json({message: "User Not found"})
+        }
+        
+        const dbPassword = (results.rows[0]) ? results.rows[0].password: null;
+        const inputPassword = password || null;
+        if(dbPassword === inputPassword) {
             // send user a oauth TOKEN? 
-            response.json({...results.rows[0]})
+            response.json({message: "Login successful",...results.rows[0]})
         } else {
+            // Wrong password
             response.status(400).json({message: 'Wrong password'})
         }
     });
 };
 
 const getShopItems = (request, response) => {
-    pool.query('SELECT * FROM items', (err, results) => {
+    const command = 'SELECT * FROM items';
+    pool.query(command, (err, results) => {
         if (!err) {
-            response.json({data: results.rows[0]});
+            response.send(results.rows);
         } else {
-            response.status(400).send(err)
+            response.status(404).json({message: err.message,  ...err})
+        }
+    });
+};
+
+const getShopItemsByName = (request, response) => {
+    const { name } = request.body;
+    pool.query('SELECT * FROM items WHERE name = $1', [name], (err, results) => {
+        if (!err) {
+            response.send(results.rows);
+        } else {
+            response.status(404).json({message: err.message,  ...err})
+        }
+    });
+};
+
+const addByNameToCart = (request, response) => {
+    const { name, quantity } = request.body;
+    const command = 'WITH alias AS (SELECT id, price FROM items WHERE name = $1) INSERT INTO cart_item (id, cart_id, item_id, quantity1) VALUES ($1, alias.id, alias.price, )';
+    const values = [name];
+    pool.query('', (err, results) => {
+        if (!err) {
+            response.send(results.rows);
+        } else {
+            response.status(404).json({message: err.message,  ...err})
         }
     });
 };
