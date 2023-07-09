@@ -114,9 +114,8 @@ const getShopItems = (request, response) => {
 };
 
 const getItemByName = (request, response) => {
-    const { name } = request.query;
-    // console.log('params, query',name);
-    pool.query('SELECT * FROM items WHERE name = $1', [name], (err, results) => {
+    const { itemName } = request.params;
+    pool.query('SELECT * FROM items WHERE name = $1', [itemName], (err, results) => {
         if (err) {
             response.status(400).json({message:err.message, ...err})
         }
@@ -129,6 +128,21 @@ const getItemByName = (request, response) => {
     });
 };
 
+const getCartsByUser = (request, response) => {
+    // add WHERE cart_item(user_id) = request.session.user.id
+    pool.query('SELECT DISTINCT cart_id FROM cart_item', (err, results) => {
+        if (err) {
+            response.status(400).json({message:err.message, ...err})
+        }
+        if (results.rows.length <= 0) {
+            response.status(404).json({message: "No cart found"})
+        }
+        else {
+            response.json({message: "Cart(s) for user", ...results.rows})
+        }
+    })
+}
+
 const addToCartByName = (request, response) => {
     const { itemName, cartId, quantity } = request.body;
     // valid values
@@ -138,7 +152,7 @@ const addToCartByName = (request, response) => {
         const values = [uuid(), cartId, itemName, quantity]
         pool.query(command, values, (err, results) => {
             if (err) {
-                response.status(400).json({message:err.message, ...err})
+                response.status(400).json({...err})
             }
             if (results.rows.length <= 0) {
                 response.status(404).json({message: "Something went wrong"})
@@ -159,6 +173,7 @@ module.exports = {
     deleteUser,
     getShopItems,
     getItemByName,
+    getCartsByUser,
     addToCartByName
 
 };
