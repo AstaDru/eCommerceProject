@@ -2,6 +2,8 @@
 const express = require('express');
 const { createUser, getUserByEmail, getShopItems } = require('../Database/db');
 
+// adding express-session?
+
 const apiRouter = express.Router();
 apiRouter.use((req, res, next)=>{
     console.log(`${req.method} -> ${req.url}`);
