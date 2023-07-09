@@ -102,8 +102,6 @@ const deleteUser = (request, response) => {
     })
 }
 
-
-
 const getShopItems = (request, response) => {
     const command = 'SELECT * FROM items';
     pool.query(command, (err, results) => {
@@ -115,28 +113,43 @@ const getShopItems = (request, response) => {
     });
 };
 
-const getShopItemsByName = (request, response) => {
-    const { name } = request.body;
+const getItemByName = (request, response) => {
+    const { name } = request.query;
+    // console.log('params, query',name);
     pool.query('SELECT * FROM items WHERE name = $1', [name], (err, results) => {
-        if (!err) {
-            response.send(results.rows);
-        } else {
-            response.status(404).json({message: err.message,  ...err})
+        if (err) {
+            response.status(400).json({message:err.message, ...err})
+        }
+        if (results.rows.length <= 0) {
+            response.status(404).json({message: "Item not found"})
+        }
+        else {
+            response.json({message: "Found item ...",...results.rows[0]})
         }
     });
 };
 
-const addByNameToCart = (request, response) => {
-    const { name, quantity } = request.body;
-    const command = 'WITH alias AS (SELECT id, price FROM items WHERE name = $1) INSERT INTO cart_item (id, cart_id, item_id, quantity1) VALUES ($1, alias.id, alias.price, )';
-    const values = [name];
-    pool.query('', (err, results) => {
-        if (!err) {
-            response.send(results.rows);
-        } else {
-            response.status(404).json({message: err.message,  ...err})
-        }
-    });
+const addToCartByName = (request, response) => {
+    const { itemName, cartId, quantity } = request.body;
+    // valid values
+    if (itemName && cartId && quantity) {
+        const command = `INSERT INTO cart_item (id, cart_id, item_id, quantity) VALUES ($1, $2, (SELECT id FROM items WHERE name = $3), $4) RETURNING *`;
+        // id not needed? user cart_id(cart_name) and item_id as PK
+        const values = [uuid(), cartId, itemName, quantity]
+        pool.query(command, values, (err, results) => {
+            if (err) {
+                response.status(400).json({message:err.message, ...err})
+            }
+            if (results.rows.length <= 0) {
+                response.status(404).json({message: "Something went wrong"})
+            }
+            else {
+                response.json({message: "Item successful added",...results.rows[0]})
+            }
+        });
+    } else {
+        response.status(400).json({message: "Invalid values"});
+    }
 };
 
 module.exports = {
@@ -145,5 +158,7 @@ module.exports = {
     setUserAtr,
     deleteUser,
     getShopItems,
+    getItemByName,
+    addToCartByName
 
 };
