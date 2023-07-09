@@ -1,10 +1,30 @@
+body {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: block;
+}
+article {
+    margin-bottom: 2.5rem;
+}
+article h3 {
+    text-decoration: underline;
+}
 ul {
     list-style-position: inside;
     list-style-type: square;
     display: block
 }
+.auth {
+    color: #000B;
+    font-size: 75%;
+}
 .url {
     background-color: #0002;
-    padding: 1px;
+    padding: 2px;
     border-radius: 2px;
+}
+code {
+    background-color: #0001;
+    opacity: 0.9;
+    padding: 2px;
 }
