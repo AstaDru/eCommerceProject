@@ -5,11 +5,11 @@ BEGIN;
 
 CREATE TABLE IF NOT EXISTS public.address
 (
-    id integer NOT NULL,
+    id integer NOT NULL ,
     building_number character varying(10) COLLATE pg_catalog."default",
     street_name character varying(50) COLLATE pg_catalog."default",
     post_code character varying(10) COLLATE pg_catalog."default",
-    CONSTRAINT address_pkey PRIMARY KEY (id)
+    CONSTRAINT address_pkey  (id)
 );
 
 CREATE TABLE IF NOT EXISTS public.cart_item
@@ -69,22 +69,22 @@ CREATE TABLE IF NOT EXISTS public.users
 ALTER TABLE IF EXISTS public.cart_item
     ADD CONSTRAINT cart_item_item_id_fkey FOREIGN KEY (item_id)
     REFERENCES public.items (id) MATCH SIMPLE
-    ON UPDATE NO ACTION
-    ON DELETE NO ACTION;
+    ON UPDATE CASCADE
+    ON DELETE CASCADE;
 
 
 ALTER TABLE IF EXISTS public.cart_item
     ADD CONSTRAINT cart_item_item_id_fkey1 FOREIGN KEY (item_id)
     REFERENCES public.items (id) MATCH SIMPLE
-    ON UPDATE NO ACTION
-    ON DELETE NO ACTION;
+    ON UPDATE CASCADE
+    ON DELETE CASCADE;
 
 
 ALTER TABLE IF EXISTS public.cart_item
     ADD CONSTRAINT cart_item_order_id_fkey FOREIGN KEY (order_id)
     REFERENCES public.orders (id) MATCH SIMPLE
-    ON UPDATE NO ACTION
-    ON DELETE NO ACTION;
+    ON UPDATE CASCADE
+    ON DELETE CASCADE;
 
 
 ALTER TABLE IF EXISTS public.orders
