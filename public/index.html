@@ -4,23 +4,72 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Documentation</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <h1>Welcome to our E-commerce Shop api</h1>
-    <p>
-      <strong> ROUTES </strong>
-    </p>
-    <ul>
-      <li><span class='url'>/api/browse</span> - GET => list all items in shop </li>
-      <li><span class='url'>/api/register</span> - POST => create user account</li>
-      <li><span class='url'>/api/login</span> - POST => Login in user</li>
+    <h2>ROUTES</h2>
+    <article>
+      <h3>Browsing</h3>
+      <p>GET - <span class="url">/api/browse</span></p>
+      <p>=> Returns an Array of all items in shop as objects</p>
+      <p>GET - <span class="url">/api/browse?{name}</span></p>
+      <p>=> Returns an item object by {name} which is passed as a url param</p>
+      <code>
+        { id: sting, name: string, price: integer, quantity: integer,
+        description: string }
+      </code>
+    </article>
+    <article>
+      <h3>User</h3>
+      <p>POST - <span class="url">/api/login</span></p>
+      <p>
+        => authenticates the user by fetching account using email
+        <code> {email: a@b.c, password: secret123 }</code>
+      </p>
+      <p>POST - <span class="url">/api/register</span> <span class="auth">~ authenticating required</span></p>
+      <p>=> Creates a new user account and returns the user object</p>
+      <p>PUT - <span class="url">/api/settings</span> <span class="auth">~ authenticating required</span></p>
+      <p>
+        => takes in to values
+        <code> {attribute: password, value: secret1234 }</code> where attribute
+        represents the users attribute key and value as the new value.
+      </p>
+      <p>DELETE - <span class="url">/api/deleteuser</span> <span class="auth">~ authenticating required</span></p>
+      <p>=> Deletes user using id of current session user</p>
+      <code>
+        { id: sting, name: string, surname: string, email: string, password:
+        string, address_id: integer }
+      </code>
+    </article>
+    <article>
+      <h3>Cart</h3>
+      <p>GET - <span class="url">/api/cart</span> <span class="auth">~ authenticating required</span></p>
+      <p>=> Returns an Array of all items in cart as objects</p>
+      <p>PUT - <span class="url">/api/addtocart</span> <span class="auth">~ authenticating required</span></p>
+      <p>
+        => adds an item from items to cart
+        <code>{itemName: string, cartId: string, quantity: integer }</code>
+      </p>
+      <p>DELETE - <span class="url">/api/removefromcart</span> <span class="auth">~ authenticating required</span></p>
+      <p>
+        => remove an item from items to cart
+        <code>{itemName: string, cartId: string }</code>
+      </p>
+      <code>
+        { id: sting, cart_id: string, item_id: integer, quantity: integer }
+      </code>
+    </article>
 
-      <li><span class='url'>/api/add_to_cart</span> - PUT (authenticated) => add item to cart using item_id</li>
-      <li><span class='url'>/api/remove_from_cart</span> - PUT (authenticated) => remove item from cart using item_id</li>
-      <li><span class='url'>/api/checkout</span> - POST (authenticated) => Push cart_items to order</li>
-      <li><span class='url'>/api/order</span> - GET (authenticated) => view all orders</li>
-      <li><span class='url'>/api/settings</span> - PUT (authenticated) => Change user attributes</li>
+    <ul>
+      <li>
+        <span class="url">/api/checkout</span> - POST (authenticated) => Push
+        cart_items to order
+      </li>
+      <li>
+        <span class="url">/api/order</span> - GET (authenticated) => view all
+        orders
+      </li>
     </ul>
   </body>
 </html>

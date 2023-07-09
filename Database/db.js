@@ -23,7 +23,7 @@ const createUser =  (request, response) => {
     const addressId = 7176;
     const command = 'INSERT INTO users (id, name, surname, email, password, address_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *';
     const values = [uuid(), name, surname, email, password, addressId];
-
+    
     pool.query(command, values, (err, results) => {
         if (!err) {
             response.json({message: "User Created", ...results.rows[0]});

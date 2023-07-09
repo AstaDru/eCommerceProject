@@ -19,7 +19,7 @@ apiRouter.use(session({
 
 apiRouter.use((req, res, next)=>{
     // Request Logger
-    console.log(`${req.method} -> ${req.url} Auth:${req.session.authenticated}`);
+    
     next();
 })
 
