@@ -45,11 +45,14 @@ const getUserByEmail = (request, response) => {
         if (results.rows.length == 0) {
             return response.status(404).json({message: "User Not found"})
         }
-        
+
         const dbPassword = (results.rows[0]) ? results.rows[0].password: null;
         const inputPassword = password || null;
         if(dbPassword === inputPassword) {
-            // send user a oauth TOKEN? 
+            // send user a auth TOKEN across session
+            request.session.authenticated = true;
+            request.session.user = {...results.rows[0]};
+
             response.json({message: "Login successful",...results.rows[0]})
         } else {
             // Wrong password
@@ -57,6 +60,49 @@ const getUserByEmail = (request, response) => {
         }
     });
 };
+
+const setUserAtr = (request, response) => {
+    // Change attribute about user in db 
+    const setAttribute = (request.body.attribute)? request.body.attribute.toLowerCase(): null;
+    const newValue = (request.body[setAttribute])? request.body[setAttribute]: null;
+    // default values matching users db column names
+    const userAttributes = {
+        name: 'name',
+        surname: 'surname',
+        email: 'email',
+        password: 'password',
+    }
+    if (userAttributes[setAttribute] && newValue) {
+        const values = [newValue, request.session.user.id];
+        // I was unable to pass userAtr[setAtr] as part of the Values array, Hence string literal
+        pool.query(`UPDATE users SET ${userAttributes[setAttribute]} = $1 WHERE id = $2 RETURNING *`, values, (err, results)=>{
+            if (err) {
+                response.status(400).json({message:err.message, ...err})
+            }
+            if (results.rows.length <= 0) {
+                response.status(404).json({message: "User not found"})
+            }
+            else {
+                response.json({message: "Update successful",...results.rows[0]})
+            }
+        })
+    } else {
+        response.status(404).json({message: "Invalid attribute/value on user"})
+    }
+}
+
+const deleteUser = (request, response) => {
+    pool.query(`DELETE FROM users WHERE id = $1`, [request.session.user.id], (err, results)=>{
+        if (err) {
+            response.status(400).json({message:err.message, ...err})
+        } else {
+            request.session = null;
+            response.status(204).json({message: "User successful deleted"});
+        }
+    })
+}
+
+
 
 const getShopItems = (request, response) => {
     const command = 'SELECT * FROM items';
@@ -96,6 +142,8 @@ const addByNameToCart = (request, response) => {
 module.exports = {
     createUser,
     getUserByEmail,
+    setUserAtr,
+    deleteUser,
     getShopItems,
 
 };
