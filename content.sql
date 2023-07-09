@@ -4,13 +4,12 @@ BEGIN;
 CREATE TABLE IF NOT EXISTS address
 (
     id integer PRIMARY KEY,
-    owner_id character varying(50),
     building_number character varying(10),
     street_name character varying(50),
     post_code character varying(10)
 );
 
-CREATE TABLE IF NOT EXISTS public.cart
+CREATE TABLE IF NOT EXISTS cart
 (
     id character varying(50) PRIMARY KEY,
     user_id character varying(50),
@@ -26,7 +25,7 @@ CREATE TABLE IF NOT EXISTS cart_item
     quantity integer
 );
 
-CREATE TABLE IF NOT EXISTS public.items
+CREATE TABLE IF NOT EXISTS items
 (
     id character varying(50) PRIMARY KEY,
     shop_id character varying(50),
@@ -35,7 +34,7 @@ CREATE TABLE IF NOT EXISTS public.items
     description character varying(200)
 );
 
-CREATE TABLE IF NOT EXISTS public.orders
+CREATE TABLE IF NOT EXISTS orders
 (
     id character varying(50) PRIMARY KEY,
     user_id character varying(50),
@@ -63,52 +62,52 @@ CREATE TABLE IF NOT EXISTS users
     shop_id character varying(50)
 );
 
-ALTER TABLE IF EXISTS public.cart
+ALTER TABLE IF EXISTS cart
     ADD FOREIGN KEY (user_id)
-    REFERENCES public.users (id) MATCH SIMPLE
-    ON UPDATE CASCADE
-    ON DELETE CASCADE;
+    REFERENCES users (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
 
 
 ALTER TABLE IF EXISTS cart_item
     ADD FOREIGN KEY (cart_id)
     REFERENCES public.cart (id) MATCH SIMPLE
-    ON UPDATE CASCADE
-    ON DELETE CASCADE;
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
 
 
 ALTER TABLE IF EXISTS cart_item
     ADD FOREIGN KEY (item_id)
     REFERENCES public.items (id) MATCH SIMPLE
-    ON UPDATE CASCADE
-    ON DELETE CASCADE;
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
 
 
 ALTER TABLE IF EXISTS items
     ADD FOREIGN KEY (shop_id)
     REFERENCES public.shop (id) MATCH SIMPLE
-    ON UPDATE CASCADE
-    ON DELETE CASCADE;
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
 
 
 ALTER TABLE IF EXISTS orders
     ADD FOREIGN KEY (cart_id)
     REFERENCES public.cart (id) MATCH SIMPLE
-    ON UPDATE CASCADE
-    ON DELETE CASCADE;
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
 
 
 ALTER TABLE IF EXISTS orders
     ADD FOREIGN KEY (user_id)
     REFERENCES public.users (id) MATCH SIMPLE
-    ON UPDATE CASCADE
-    ON DELETE CASCADE;
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
 
 
 ALTER TABLE IF EXISTS users
     ADD FOREIGN KEY (shop_id)
     REFERENCES public.shop (id) MATCH SIMPLE
-    ON UPDATE CASCADE
-    ON DELETE CASCADE;
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
 
 END;
