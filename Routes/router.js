@@ -1,7 +1,7 @@
 // main routers handler (requests controller)
 const express = require('express');
 const session = require('express-session');
-const { createUser, getUserByEmail, setUserAtr, deleteUser, getShopItems } = require('../Database/db');
+const { createUser, getUserByEmail, setUserAtr, deleteUser, getShopItems, getItemByName, addToCartByName } = require('../Database/db');
 
 const apiRouter = express.Router();
 
@@ -45,9 +45,12 @@ apiRouter.put('/settings', isAuthenticated, setUserAtr);
 
 apiRouter.get('/deleteuser', isAuthenticated, deleteUser);
 
+// Need fix
+apiRouter.get('/browse:name', getItemByName);
+
 apiRouter.get('/browse', getShopItems);
 
-apiRouter.put('/addtocart', isAuthenticated)
+apiRouter.put('/addtocart', isAuthenticated, addToCartByName)
 
 apiRouter.put('/removefromcart', isAuthenticated)
 
