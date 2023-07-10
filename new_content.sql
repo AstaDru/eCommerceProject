@@ -5,65 +5,59 @@ BEGIN;
 
 CREATE TABLE IF NOT EXISTS public.address
 (
-    id integer NOT NULL ,
+    id integer PRIMARY KEY,
     building_number character varying(10) COLLATE pg_catalog."default",
     street_name character varying(50) COLLATE pg_catalog."default",
-    post_code character varying(10) COLLATE pg_catalog."default",
-    CONSTRAINT address_pkey  (id)
+    post_code character varying(10) COLLATE pg_catalog."default"
 );
 
 CREATE TABLE IF NOT EXISTS public.cart_item
 (
-    id character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    id character varying(50) COLLATE pg_catalog."default" PRIMARY KEY,
     item_id character varying(50) COLLATE pg_catalog."default",
     user_id character varying(50) COLLATE pg_catalog."default",
     quantity integer,
     total_price_per_item integer,
-    order_id "char",
-    CONSTRAINT cart_item_pkey PRIMARY KEY (id)
+    order_id "char"
 );
 
 CREATE TABLE IF NOT EXISTS public.items
 (
-    id character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    id character varying(50) COLLATE pg_catalog."default" PRIMARY KEY,
     name character varying(50) COLLATE pg_catalog."default",
     quantity integer,
     description character varying(200) COLLATE pg_catalog."default",
     price integer,
-    status character varying(50) COLLATE pg_catalog."default",
-    CONSTRAINT items_pkey PRIMARY KEY (id)
+    status character varying(50) COLLATE pg_catalog."default"
 );
 
 CREATE TABLE IF NOT EXISTS public.orders
 (
-    id character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    id character varying(50) COLLATE pg_catalog."default" PRIMARY KEY,
     user_id character varying(50) COLLATE pg_catalog."default",
     total_quantity integer,
     total_price integer,
-    status "char" NOT NULL,
-    CONSTRAINT orders_pkey PRIMARY KEY (id)
+    status "char" NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS public.shop
 (
-    id character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    id character varying(50) COLLATE pg_catalog."default" PRIMARY KEY,
     name character varying(50) COLLATE pg_catalog."default" NOT NULL,
     email character varying(50) COLLATE pg_catalog."default",
     phone_nr integer,
     address_id integer,
-    capital integer,
-    CONSTRAINT shop_pkey PRIMARY KEY (id)
+    capital integer
 );
 
 CREATE TABLE IF NOT EXISTS public.users
 (
-    id character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    id character varying(50) COLLATE pg_catalog."default" PRIMARY KEY,
     address_id integer NOT NULL,
     name character varying(50) COLLATE pg_catalog."default" NOT NULL,
     surname character varying(50) COLLATE pg_catalog."default" NOT NULL,
     email character varying(50) COLLATE pg_catalog."default",
-    password character varying(50) COLLATE pg_catalog."default" NOT NULL,
-    CONSTRAINT users_pkey PRIMARY KEY (id)
+    password character varying(50) COLLATE pg_catalog."default" NOT NULL
 );
 
 ALTER TABLE IF EXISTS public.cart_item

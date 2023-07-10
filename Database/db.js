@@ -143,12 +143,22 @@ const getCartsByUser = (request, response) => {
 }
 
 const addToCartByName = (request, response) => {
-    //#############    if cart item name already exists with current order id, then update existing cart item ####
-    const { itemName, quantity } = request.body
-    // valid values
+    // if cart item name already exists with current order id, then update existing cart item ####
+    // if cart_item.item_id Already exist increase quantity or redirect to '/cart/changeqty' 
+    const { itemName, quantity } = request.body;
+  
     if (itemName && quantity) {
-        pool.query("INSERT INTO cart_item (id, item_id, user_id, quantity, total_price_per_item, order_id) VALUES ($1, (SELECT id FROM items WHERE name = $2), $3, $4, ($5 * (SELECT price FROM items WHERE name = $6)),(SELECT id FROM orders WHERE status = 'current' AND user_id = $7)) RETURNING *", [uuid(),itemName, request.session.user.id,quantity ,quantity, itemName, request.session.user.id], (err, results) => {
-            console.log(results)
+        const command = `INSERT INTO cart_item (id, item_id, user_id, quantity, total_price_per_item, order_id) VALUES (
+            $1::text,
+            (SELECT id FROM items WHERE name = $2)::text,
+            $3::text,
+            $4::integer,
+            ($4::integer * (SELECT price FROM items WHERE name = $2)::integer)::integer,
+            (SELECT id FROM orders WHERE status = 'current' AND user_id = $3)::text
+        ) RETURNING * `;
+        // Type Error when passing query to SQL 
+        const values = [uuid(), itemName, request.session.user.id, quantity];
+        pool.query(command, values, (err, results) => {
             if (err) {
                 response.status(400).json({...err})
             }
@@ -202,6 +212,73 @@ const removeCartItem = (request, response) => {
 };
 
 
+const removeFromCartByName = (request, response) => {
+    // UPDATE SCHEMA add item_name to cart_item
+    const { itemName } = request.body;
+    if (itemName) {
+        pool.query('DELETE FROM cart_item WHERE item_id = (SELECT id FROM items WHERE name = $1)', [itemName], (err, results)=> {
+            if (err) {
+                response.status(400).json({message:err.message, ...err})
+            } else {
+                response.status(204).json({message: "Cart item successful deleted"});
+            };
+        })
+    }
+};
+
+const changeCartItemQuantityByName = (request, response) => {
+    // UPDATE SCHEMA cart_item.item_id Must be UINQUE
+    const { itemName, quantity } = request.body;
+    if (itemName && quantity) {
+        pool.query('UPDATE cart_item SET quantity = $1 WHERE item_id = (SELECT id FROM items WHERE name = $2) RETURNING *', [quantity, itemName], (err, results) =>{
+            if (err) {
+                response.status(400).json({message:err.message, ...err})
+            }
+            if (results.rows.length <= 0) {
+                response.status(404).json({message: "Item not found"})
+            }
+            else {
+                response.json({message: "Quantity successful updated",...results.rows[0]})
+            }
+        })
+    } else {
+        response.status(400).json({message: "Invalid values"})
+    }
+};
+
+const checkoutCart = (request, response) => {
+    // update SCHEMA orders.status [data type] # currently only shows first letter (might currently have [char] type)
+    // update SCHEMA add trigger to create new when order.status = 'completed'
+    // SUM(price), SUM(quantity)
+    const command = "UPDATE orders SET status = 'processed' WHERE status = 'current' AND user_id = $1::text RETURNING *";
+    const values = [request.session.user.id];
+    pool.query(command, values, (err, results) => {
+        if (err) {
+            response.status(400).json({message: err.message, ...err});
+        } 
+        if (results.rows.length == 0) {
+            response.json({message: 'No content found'});
+        } else {
+            response.send(results.rows);
+        }
+    })
+}
+
+const getOrders = (request, response) => {
+    const command = "SELECT * FROM orders WHERE user_id = $1";
+    const values = [request.session.user.id];
+    pool.query(command, values, (err, results) => {
+        if (err) {
+            response.status(400).json({message: err.message, ...err});
+        } 
+        if (results.rows.length == 0) {
+            response.json({message: 'No content found'});
+        } else {
+            response.send(results.rows);
+        }
+    })   
+}
+
 module.exports = {
     createUser,
     getUserByEmail,
@@ -211,6 +288,10 @@ module.exports = {
     getItemByName,
     getCartsByUser,
     addToCartByName,
-    removeCartItem
+    /* removeCartItem, */
+    removeFromCartByName,
+    changeCartItemQuantityByName,
+    checkoutCart,
+    getOrders
 
 };
