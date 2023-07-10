@@ -143,6 +143,7 @@ const getCartsByUser = (request, response) => {
 }
 
 const addToCartByName = (request, response) => {
+    // if cart_item.item_id Already exist increase quantity or redirect to '/cart/changeqty' 
     const { itemName, quantity } = request.body;
     // valid values
     if (itemName && quantity) {
@@ -172,6 +173,73 @@ const addToCartByName = (request, response) => {
     }
 };
 
+const removeFromCartByName = (request, response) => {
+    // UPDATE SCHEMA add item_name to cart_item
+    const { itemName } = request.body;
+    if (itemName) {
+        pool.query('DELETE FROM cart_item WHERE item_id = (SELECT id FROM items WHERE name = $1)', [itemName], (err, results)=> {
+            if (err) {
+                response.status(400).json({message:err.message, ...err})
+            } else {
+                response.status(204).json({message: "Cart item successful deleted"});
+            };
+        })
+    }
+};
+
+const changeCartItemQuantityByName = (request, response) => {
+    // UPDATE SCHEMA cart_item.item_id Must be UINQUE
+    const { itemName, quantity } = request.body;
+    if (itemName && quantity) {
+        pool.query('UPDATE cart_item SET quantity = $1 WHERE item_id = (SELECT id FROM items WHERE name = $2) RETURNING *', [quantity, itemName], (err, results) =>{
+            if (err) {
+                response.status(400).json({message:err.message, ...err})
+            }
+            if (results.rows.length <= 0) {
+                response.status(404).json({message: "Item not found"})
+            }
+            else {
+                response.json({message: "Quantity successful updated",...results.rows[0]})
+            }
+        })
+    } else {
+        response.status(400).json({message: "Invalid values"})
+    }
+};
+
+const checkoutCart = (request, response) => {
+    // update SCHEMA orders.status [data type] # currently only shows first letter (might currently have [char] type)
+    // update SCHEMA add trigger to create new when order.status = 'completed'
+    // SUM(price), SUM(quantity)
+    const command = "UPDATE orders SET status = 'processed' WHERE status = 'current' AND user_id = $1::text RETURNING *";
+    const values = [request.session.user.id];
+    pool.query(command, values, (err, results) => {
+        if (err) {
+            response.status(400).json({message: err.message, ...err});
+        } 
+        if (results.rows.length == 0) {
+            response.json({message: 'No content found'});
+        } else {
+            response.send(results.rows);
+        }
+    })
+}
+
+const getOrders = (request, response) => {
+    const command = "SELECT * FROM orders WHERE user_id = $1";
+    const values = [request.session.user.id];
+    pool.query(command, values, (err, results) => {
+        if (err) {
+            response.status(400).json({message: err.message, ...err});
+        } 
+        if (results.rows.length == 0) {
+            response.json({message: 'No content found'});
+        } else {
+            response.send(results.rows);
+        }
+    })   
+}
+
 module.exports = {
     createUser,
     getUserByEmail,
@@ -180,6 +248,10 @@ module.exports = {
     getShopItems,
     getItemByName,
     getCartsByUser,
-    addToCartByName
+    addToCartByName,
+    removeFromCartByName,
+    changeCartItemQuantityByName,
+    checkoutCart,
+    getOrders
 
 };
