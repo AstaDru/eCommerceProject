@@ -129,28 +129,28 @@ const getItemByName = (request, response) => {
 };
 
 const getCartsByUser = (request, response) => {
-    // add WHERE cart_item(user_id) = request.session.user.id
-    pool.query('SELECT DISTINCT cart_id FROM cart_item', (err, results) => {
+    pool.query("SELECT * FROM cart_item WHERE order_id = (SELECT id FROM orders WHERE status = 'current' AND user_id = $1)",[request.session.user.id] , (err, results) => {
         if (err) {
             response.status(400).json({message:err.message, ...err})
         }
-        if (results.rows.length <= 0) {
+        if (results.rows.length == 0) {
             response.status(404).json({message: "No cart found"})
         }
         else {
-            response.json({message: "Cart(s) for user", ...results.rows})
+            response.send(results.rows)
         }
     })
 }
 
 const addToCartByName = (request, response) => {
-    const { itemName, cartId, quantity } = request.body;
+    const { itemName, quantity } = request.body;
     // valid values
-    if (itemName && cartId && quantity) {
-        const command = `INSERT INTO cart_item (id, cart_id, item_id, quantity) VALUES ($1, $2, (SELECT id FROM items WHERE name = $3), $4) RETURNING *`;
+    if (itemName && quantity) {
+        const command = "INSERT INTO cart_item (id, item_id, user_id, quantity, total_price_per_item, order_id) VALUES ($1, (SELECT id FROM items WHERE name = $2), (SELECT price FROM items WHERE name = $2) , $3, (SELECT id FROM orders WHERE status = 'current' AND user_id = $3)) RETURNING *";
         // id not needed? user cart_id(cart_name) and item_id as PK
-        const values = [uuid(), cartId, itemName, quantity]
+        const values = [uuid(), request.session.user.id, quantity]
         pool.query(command, values, (err, results) => {
+            console.log(results)
             if (err) {
                 response.status(400).json({...err})
             }

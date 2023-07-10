@@ -51,7 +51,7 @@ apiRouter.get('/browse/:itemName', getItemByName);
 
 apiRouter.get('/cart', isAuthenticated, getCartsByUser)
 
-apiRouter.put('/addtocart', isAuthenticated, addToCartByName)
+apiRouter.post('/addtocart', isAuthenticated, addToCartByName)
 
 apiRouter.delete('/removefromcart', isAuthenticated)
 
