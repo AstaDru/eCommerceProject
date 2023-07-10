@@ -23,7 +23,7 @@ const createUser =  (request, response) => {
     const addressId = 7176;
     const command = 'INSERT INTO users (id, name, surname, email, password, address_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *';
     const values = [uuid(), name, surname, email, password, addressId];
-
+    
     pool.query(command, values, (err, results) => {
         if (!err) {
             response.json({message: "User Created", ...results.rows[0]});
@@ -129,16 +129,15 @@ const getItemByName = (request, response) => {
 };
 
 const getCartsByUser = (request, response) => {
-    // add WHERE cart_item(user_id) = request.session.user.id
-    pool.query('SELECT DISTINCT cart_id FROM cart_item', (err, results) => {
+    pool.query("SELECT * FROM cart_item WHERE order_id = (SELECT id FROM orders WHERE status = 'current' AND user_id = $1)",[request.session.user.id] , (err, results) => {
         if (err) {
             response.status(400).json({message:err.message, ...err})
         }
-        if (results.rows.length <= 0) {
+        if (results.rows.length == 0) {
             response.status(404).json({message: "No cart found"})
         }
         else {
-            response.json({message: "Cart(s) for user", ...results.rows})
+            response.send(results.rows)
         }
     })
 }
@@ -158,6 +157,7 @@ const addToCartByName = (request, response) => {
         // adding another reference to session.user.id @$5 the problem is fixed 😠😕 
         const values = [uuid(), itemName, request.session.user.id, quantity, request.session.user.id]
         pool.query(command, values, (err, results) => {
+            console.log(results)
             if (err) {
                 response.status(400).json({...err})
             }

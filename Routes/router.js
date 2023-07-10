@@ -19,7 +19,7 @@ apiRouter.use(session({
 
 apiRouter.use((req, res, next)=>{
     // Request Logger
-    console.log(`${req.method} -> ${req.url} Auth:${req.session.authenticated}`);
+    
     next();
 })
 
@@ -51,7 +51,7 @@ apiRouter.get('/browse/:itemName', getItemByName);
 
 apiRouter.get('/cart', isAuthenticated, getCartsByUser)
 
-apiRouter.put('/addtocart', isAuthenticated, addToCartByName)
+apiRouter.post('/addtocart', isAuthenticated, addToCartByName)
 
 apiRouter.delete('/removefromcart', isAuthenticated)
 

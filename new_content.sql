@@ -90,7 +90,7 @@ ALTER TABLE IF EXISTS public.orders
 
 ALTER TABLE IF EXISTS public.orders
     ADD CONSTRAINT orders_user_id_fkey1 FOREIGN KEY (user_id)
-    REFERENCES public.users (id) MATCH SIMPLE
+    REFERENCES public.users(id) MATCH SIMPLE
     ON UPDATE CASCADE
     ON DELETE CASCADE;
 
