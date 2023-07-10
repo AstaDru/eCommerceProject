@@ -144,18 +144,18 @@ const getCartsByUser = (request, response) => {
 }
 
 const addToCartByName = (request, response) => {
-    const { itemName, cartId, quantity } = request.body;
+    const { itemName, quantity } = request.body;
     // valid values
     if (itemName && quantity) {
-        //const command = "INSERT INTO cart_item (id, item_id, user_id, quantity, total_price_per_item) VALUES ($1, (SELECT id FROM items WHERE name = $2), $3, $4, (SELECT price FROM items WHERE name = $2)) RETURNING *";
         const command = `INSERT INTO cart_item (id, item_id, user_id, quantity, total_price_per_item, order_id) VALUES (
             $1,
             (SELECT id FROM items WHERE name = $2), 
             $3,
             $4,
             (SELECT price FROM items WHERE name = $2),
-            (SELECT id FROM orders WHERE user_id = $3 AND status = 'current' )
+            (SELECT id FROM orders WHERE user_id = $5 AND status = 'current' )
         ) RETURNING * `;
+        // adding another reference to session.user.id @$5 the problem is fixed 😠😕 
         const values = [uuid(), itemName, request.session.user.id, quantity, request.session.user.id]
         pool.query(command, values, (err, results) => {
             if (err) {

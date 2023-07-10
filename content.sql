@@ -3,8 +3,6 @@ INSERT INTO items VALUES ('uuidaxa', 'Banana', 16, 'Yellow tick', 2, 'Love em');
 INSERT INTO items VALUES ('uuidaxb', 'Cherry', 12, 'Fruits', 5, 'Fruit');
 INSERT INTO items VALUES ('uuidaxc', 'Donut', 8, 'Circle with a hole', 6, 'Cops Love then ????');
 
-INSERT INTO cart_item (id, item_id, user_id, quantity, total_price_per_item, order_id) VALUES ('soroid', (SELECT id FROM items WHERE name = 'Apple'), '10281657-8f29-459f-ab4f-58484d5de6e2', 7, (SELECT price FROM items WHERE name = 'Apple'), (SELECT id FROM orders WHERE status = 'current' AND user_id = '10281657-8f29-459f-ab4f-58484d5de6e2'));
-
 INSERT INTO cart_item (id, item_id, user_id, quantity, total_price_per_item, order_id) VALUES (
     $1,
     (SELECT id FROM items WHERE name = $2), 
