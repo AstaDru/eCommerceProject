@@ -146,10 +146,17 @@ const getCartsByUser = (request, response) => {
 const addToCartByName = (request, response) => {
     const { itemName, cartId, quantity } = request.body;
     // valid values
-    if (itemName && cartId && quantity) {
-        const command = `INSERT INTO cart_item (id, cart_id, item_id, quantity) VALUES ($1, $2, (SELECT id FROM items WHERE name = $3), $4) RETURNING *`;
-        // id not needed? user cart_id(cart_name) and item_id as PK
-        const values = [uuid(), cartId, itemName, quantity]
+    if (itemName && quantity) {
+        //const command = "INSERT INTO cart_item (id, item_id, user_id, quantity, total_price_per_item) VALUES ($1, (SELECT id FROM items WHERE name = $2), $3, $4, (SELECT price FROM items WHERE name = $2)) RETURNING *";
+        const command = `INSERT INTO cart_item (id, item_id, user_id, quantity, total_price_per_item, order_id) VALUES (
+            $1,
+            (SELECT id FROM items WHERE name = $2), 
+            $3,
+            $4,
+            (SELECT price FROM items WHERE name = $2),
+            (SELECT id FROM orders WHERE user_id = $3 AND status = 'current' )
+        ) RETURNING * `;
+        const values = [uuid(), itemName, request.session.user.id, quantity, request.session.user.id]
         pool.query(command, values, (err, results) => {
             if (err) {
                 response.status(400).json({...err})
