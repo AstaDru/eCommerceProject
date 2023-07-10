@@ -147,17 +147,16 @@ const addToCartByName = (request, response) => {
     // valid values
     if (itemName && quantity) {
         const command = `INSERT INTO cart_item (id, item_id, user_id, quantity, total_price_per_item, order_id) VALUES (
-            $1,
-            (SELECT id FROM items WHERE name = $2), 
-            $3,
-            $4,
-            (SELECT price FROM items WHERE name = $2),
-            (SELECT id FROM orders WHERE user_id = $5 AND status = 'current' )
+            $1::text,
+            (SELECT id FROM items WHERE name = $2)::text, 
+            $3::text,
+            $4::integer,
+            (SELECT price FROM items WHERE name = $2)::integer,
+            (SELECT id FROM orders WHERE user_id = $3 AND status = 'current' )::text
         ) RETURNING * `;
-        // adding another reference to session.user.id @$5 the problem is fixed 😠😕 
-        const values = [uuid(), itemName, request.session.user.id, quantity, request.session.user.id]
+        // Type Error when passing query to SQL 
+        const values = [uuid(), itemName, request.session.user.id, quantity];
         pool.query(command, values, (err, results) => {
-            console.log(results)
             if (err) {
                 response.status(400).json({...err})
             }
