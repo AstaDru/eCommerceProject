@@ -2,7 +2,7 @@
 -- Please log an issue at https://redmine.postgresql.org/projects/pgadmin4/issues/new if you find any bugs, including reproduction steps.
 BEGIN;
 
-CREATE TABLE IF NOT EXISTS public.users
+CREATE TABLE IF NOT EXISTS users
 (
     id character varying(50) PRIMARY KEY,
     name character varying(50) NOT NULL,
@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS public.users
     address character varying(200) NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS public.orders
+CREATE TABLE IF NOT EXISTS orders
 (
     id character varying(50) PRIMARY KEY,
     user_id character varying(50) REFERENCES users(id),
@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS public.orders
     total_price integer
 );
 
-CREATE TABLE IF NOT EXISTS public.items
+CREATE TABLE IF NOT EXISTS items
 (
     name character varying(50) PRIMARY KEY,
     price integer,
@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS public.items
     description character varying(200)
 );
 
-CREATE TABLE IF NOT EXISTS public.cart_items
+CREATE TABLE IF NOT EXISTS cart_items
 (
     order_id character varying(50) REFERENCES orders(id),
     user_id character varying(50) REFERENCES users(id),
@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS public.cart_items
     total_price integer
 );
 
-CREATE TABLE IF NOT EXISTS public.shop
+CREATE TABLE IF NOT EXISTS shop
 (
     id character varying(50) PRIMARY KEY,
     name character varying(50),
@@ -51,37 +51,120 @@ CREATE TABLE IF NOT EXISTS public.shop
 
 -- ALTER
 
-ALTER TABLE IF EXISTS public.orders
+ALTER TABLE IF EXISTS orders
     ADD FOREIGN KEY (user_id)
-    REFERENCES public.users(id)
+    REFERENCES users(id)
     ON DELETE CASCADE;
 
 
 
-ALTER TABLE IF EXISTS public.cart_items
+ALTER TABLE IF EXISTS cart_items
     ADD FOREIGN KEY (order_id)
-    REFERENCES public.orders (id)
+    REFERENCES orders (id)
     ON DELETE CASCADE;
 
 
-ALTER TABLE IF EXISTS public.cart_items
+ALTER TABLE IF EXISTS cart_items
     ADD FOREIGN KEY (item_name)
-    REFERENCES public.items (name)
+    REFERENCES items (name)
     ON UPDATE CASCADE
     ON DELETE CASCADE;
 
 
-ALTER TABLE IF EXISTS public.cart_items
+ALTER TABLE IF EXISTS cart_items
     ADD FOREIGN KEY (user_id)
-    REFERENCES public.users (id) MATCH SIMPLE
+    REFERENCES users (id)
     ON UPDATE CASCADE
     ON DELETE CASCADE;
 
+END;
+
+-----------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------
+-- Trigger
+-- NOTE -:- Triggers use alphabetic order on name for execution
+
+-- When creating new account => Assign new order
+CREATE OR REPLACE FUNCTION make_order() RETURNS TRIGGER AS $$
+    BEGIN
+        INSERT INTO orders (id, user_id, status, total_quantity, total_price) 
+        VALUES (gen_random_uuid(), NEW.id, 'current', 0, 0);
+        RETURN NEW;
+    END;
+$$ LANGUAGE PLPGSQL;
+
+CREATE OR REPLACE TRIGGER new_order_on_new_user
+    AFTER INSERT 
+    ON users
+    FOR EACH ROW
+    EXECUTE FUNCTION make_order();
+
+
+-- On checkout assign creates and new order to user
+CREATE OR REPLACE FUNCTION another_order() RETURNS TRIGGER AS $$
+    BEGIN
+        INSERT INTO orders (id, user_id, status, total_quantity, total_price) 
+        VALUES (gen_random_uuid(), OLD.user_id, 'current', 0, 0);
+        RETURN NEW;
+    END;
+$$ LANGUAGE PLPGSQL;
+
+CREATE OR REPLACE TRIGGER order_on_completed
+    AFTER UPDATE 
+    ON orders
+    FOR EACH ROW
+    -- May require a second condition for user_id
+    WHEN (NEW.status = 'completed')
+    EXECUTE FUNCTION another_order();
+
+
+-- On Checkout reduce items.quantity  
+CREATE OR REPLACE FUNCTION reduce_items() RETURNS TRIGGER AS $$
+    BEGIN
+        UPDATE items 
+        set quantity = subQuery.newQuantity
+        FROM (
+            SELECT items.name AS name, (items.quantity - cart_items.quantity) AS newQuantity
+            FROM items, cart_items
+            WHERE items.name = cart_items.item_name
+        ) AS subquery
+        WHERE items.name = subquery.name;
+        RETURN NEW;
+    END;
+$$ LANGUAGE PLPGSQL;
+
+CREATE OR REPLACE TRIGGER quantity_after_checkout
+    AFTER UPDATE 
+    ON orders
+    FOR EACH ROW
+    WHEN (NEW.status = 'completed')
+    EXECUTE FUNCTION reduce_items();
+
+
+-- Creates totals for price and quantity on checkout
+-- Still in DEV
+CREATE OR REPLACE FUNCTION sum_order() RETURNS TRIGGER AS $$
+    BEGIN
+        UPDATE orders 
+		set total_price = (SELECT SUM(total_price) FROM cart_items),
+		total_quantity = (SELECT SUM(quantity) FROM cart_items)
+		WHERE status = 'current';
+        RETURN NEW;
+    END;
+$$ LANGUAGE PLPGSQL;
+
+CREATE OR REPLACE TRIGGER checkout_total
+    BEFORE UPDATE 
+    ON orders
+    FOR EACH ROW
+    WHEN (NEW.status = 'completed')
+    EXECUTE FUNCTION sum_order();
 
 -----------------------------------------------------------------------------------------------------
 -----------------------------------------------------------------------------------------------------
 -- POPULATING ITEMS 
 
+BEGIN;
 
 INSERT INTO items VALUES ('apple', 2, 50, 'Red, Green, Red n Yellow');
 INSERT INTO items VALUES ('banana', 1, 50, 'Yellow fruit');
@@ -90,13 +173,14 @@ INSERT INTO items VALUES ('kiwi', 3, 50, 'Brownish hairy and green inside');
 INSERT INTO items VALUES ('grape', 3, 50, 'Many dots');
 INSERT INTO items VALUES ('orange', 2, 50, 'They are yellow in color');
 INSERT INTO items VALUES ('donut', 2, 50, 'Cops love em??');
-INSERT INTO items VALUES ('cheese', 7, 50, 'Say cheeeese');
+INSERT INTO items VALUES ('cheese', 14, 50, 'Say cheeeese');
 INSERT INTO items VALUES ('Computer', 200, 50, 'Humanity"s super-power');
 INSERT INTO items VALUES ('rock', 1000, 50, 'The most stable object');
 
 INSERT INTO users VALUES ('usrid', 'testName', 'testSurname', 'a@b.c', '1234', '22 Jump str');
 
-INSERT INTO orders VALUES ('theorder66', 'usrid', 'current', 0, 0);
+--INSERT INTO cart_items VALUES ('8d1ea4b4-a8b9-43f7-86b1-13a221d1e11a', 'usrid', 'banana', 7, 30);
 
+--INSERT INTO orders VALUES ('theorder66', 'usrid', 'current', 0, 0);
 
 END;
