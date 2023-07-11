@@ -1,8 +1,7 @@
 // CRUD on products db
-const { request, response } = require('express');
+
 const { Pool } = require('pg');
  const uuid  = require('uuid').v4;
-
 // Set n Get data from the .env file
 require('dotenv').config(); // https://www.freecodecamp.org/news/how-to-use-node-environment-variables-with-a-dotenv-file-for-node-js-and-npm/
 const pgHOST = process.env.pgHOST;
@@ -16,7 +15,6 @@ const pool = new Pool({
     database: 'shop',
     port: 5432
 });
-
 
 const createUser =  (request, response) => {
     const {name, surname, email, password} = request.body;
@@ -37,7 +35,6 @@ const getUserByEmail = (request, response) => {
     // get user by email from users and compare password for auth
     const { email, password } = request.body;
     pool.query('SELECT * FROM users WHERE email = $1', [email], (err, results) => {
-        // error
         if (err) {
             return response.status(404).json({message: err.message,  ...err})
         }
@@ -45,10 +42,9 @@ const getUserByEmail = (request, response) => {
         if (results.rows.length == 0) {
             return response.status(404).json({message: "User Not found"})
         }
-
         const dbPassword = (results.rows[0]) ? results.rows[0].password: null;
         const inputPassword = password || null;
-        if(dbPassword === inputPassword) {
+        if (dbPassword === inputPassword) {
             // send user a auth TOKEN across session
             request.session.authenticated = true;
             request.session.user = {...results.rows[0]};
@@ -130,11 +126,13 @@ const getItemByName = (request, response) => {
 
 const getCartsByUser = (request, response) => {
     pool.query("SELECT * FROM cart_item WHERE order_id = (SELECT id FROM orders WHERE status = 'current' AND user_id = $1)",[request.session.user.id] , (err, results) => {
+       console.log(results);
+       
         if (err) {
             response.status(400).json({message:err.message, ...err})
         }
         if (results.rows.length == 0) {
-            response.status(404).json({message: "No cart found"})
+            response.status(204).json({message: "Current cart is empty"})
         }
         else {
             response.send(results.rows)
@@ -173,35 +171,21 @@ const addToCartByName = (request, response) => {
         response.status(400).json({message: "Invalid values"});
     }
 };
-/*const reduceCartItemQty = (request, response) => {
-    // look for cart item with given name with current order id
-    // quantity to reduce from existing cart item with current order id @  check if quantity given is not larger then existing cart item qty
-    //if qty given is == qty in cart item then at the end redirect to removefromcart
-    const { itemName, quantity } = request.body
-    // valid values
-    if (itemName && quantity) {
-        pool.query("INSERT INTO cart_item (id, item_id, user_id, quantity, total_price_per_item, order_id) VALUES ($1, (SELECT id FROM items WHERE name = $2), $3, $4, ($5 * (SELECT price FROM items WHERE name = $6)),(SELECT id FROM orders WHERE status = 'current' AND user_id = $7)) RETURNING *", [uuid(),itemName, request.session.user.id,quantity ,quantity, itemName, request.session.user.id], (err, results) => {
-            console.log(results)
-           
-};*/
 
-const removeCartItem = (request, response) => {
+const removeFromCartByName = (request, response) => {
     // look for cart item with given name with current order id
     const { itemName} = request.body
-    console.log('item name: ' + JSON.stringify(itemName));
-  
-    // valid values
-    if (itemName) {
-            pool.query("DELETE FROM cart_item WHERE item_id = (SELECT id FROM items WHERE name = $1) AND order_id = (SELECT id FROM orders  WHERE status = 'current' AND user_id = $2)) RETURNING * ", [nm, request.session.user.id] , (err, results) => {
 
-        
+    if (itemName) {
+            pool.query("DELETE FROM cart_item WHERE item_id = (SELECT id FROM items WHERE name = $1)::text AND order_id = (SELECT id FROM orders  WHERE status = 'current' AND user_id = $2)::text RETURNING *", [ itemName, request.session.user.id] , (err, results) => {
+
         console.log(results)
             if (err) {
-                response.status(400).json({...err})
+                response.status(400).json({message:err.message, ...err})
             }
-           // if (results.rows.length <= 0) {
-            //    response.status(404).json({message: "Something went wrong"})
-            //}
+            if (results.rows.length <= 0) {
+              response.status(404).json({message: "Something went wrong"})
+            }
             else {
                 response.json({message: "Item successfully removed",...results.rows[0]})
             }
@@ -212,25 +196,33 @@ const removeCartItem = (request, response) => {
 };
 
 
-const removeFromCartByName = (request, response) => {
+const clearCart = (request, response) => {
     // UPDATE SCHEMA add item_name to cart_item
-    const { itemName } = request.body;
-    if (itemName) {
-        pool.query('DELETE FROM cart_item WHERE item_id = (SELECT id FROM items WHERE name = $1)', [itemName], (err, results)=> {
+    
+        pool.query("DELETE FROM cart_item WHERE order_id = (SELECT id FROM orders WHERE user_id = $1 AND status ='current')::text  RETURNING *", [request.session.user.id], (err, results)=> {
             if (err) {
                 response.status(400).json({message:err.message, ...err})
             } else {
                 response.status(204).json({message: "Cart item successful deleted"});
             };
         })
-    }
+    
 };
 
 const changeCartItemQuantityByName = (request, response) => {
     // UPDATE SCHEMA cart_item.item_id Must be UINQUE
     const { itemName, quantity } = request.body;
+   console.log('items ' + JSON.stringify(response.body));
+   
     if (itemName && quantity) {
-        pool.query('UPDATE cart_item SET quantity = $1 WHERE item_id = (SELECT id FROM items WHERE name = $2) RETURNING *', [quantity, itemName], (err, results) =>{
+ if (quantity == 0){
+    removeFromCartByName(request, response)
+
+    }
+    else {
+        pool.query('UPDATE cart_item SET quantity = $1 WHERE item_id = (SELECT id FROM items WHERE name = $2)::text AND quantity <= (SELECT quantity FROM items WHERE name = $3)::int RETURNING *', [quantity, itemName, itemName], (err, results) =>{
+            console.log(results);
+            
             if (err) {
                 response.status(400).json({message:err.message, ...err})
             }
@@ -241,6 +233,9 @@ const changeCartItemQuantityByName = (request, response) => {
                 response.json({message: "Quantity successful updated",...results.rows[0]})
             }
         })
+    }
+
+        
     } else {
         response.status(400).json({message: "Invalid values"})
     }
@@ -288,10 +283,10 @@ module.exports = {
     getItemByName,
     getCartsByUser,
     addToCartByName,
-    /* removeCartItem, */
     removeFromCartByName,
     changeCartItemQuantityByName,
     checkoutCart,
-    getOrders
+    getOrders,
+    clearCart
 
 };

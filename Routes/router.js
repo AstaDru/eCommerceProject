@@ -2,7 +2,7 @@
 const express = require('express');
 const session = require('express-session');
 
-const { createUser, getUserByEmail, setUserAtr, deleteUser, getShopItems, getItemByName, getCartsByUser, addToCartByName, removeFromCartByName, changeCartItemQuantityByName, checkoutCart, getOrders, removeCartItem } = require('../Database/db');
+const { createUser, getUserByEmail, setUserAtr, deleteUser, getShopItems, getItemByName, getCartsByUser, addToCartByName, removeFromCartByName, changeCartItemQuantityByName, checkoutCart, getOrders, clearCart } = require('../Database/db');
 
 const apiRouter = express.Router();
 
@@ -56,18 +56,11 @@ apiRouter.get('/cart', isAuthenticated, getCartsByUser);
 //apiRouter.post('/addtocart', isAuthenticated, addToCartByName)
 apiRouter.post('/cart/additem', isAuthenticated, addToCartByName)
 
-
-//  #####    @@@@    added route
-//apiRouter.put('/reducecartitemqty', isAuthenticated, reduceCartItemQty)
-//##############################
-
-apiRouter.delete('/removefromcart', isAuthenticated, removeCartItem)
+apiRouter.delete('/cart/removefromcart', isAuthenticated, removeFromCartByName)
 
 apiRouter.put('/cart/changeqty', isAuthenticated, changeCartItemQuantityByName)
-// #####    @@@@    added route
 
-//apiRouter.delete('/removefromcart', isAuthenticated, removeFromCartByName);
-apiRouter.delete('/cart/removeitem', isAuthenticated, removeFromCartByName)
+apiRouter.delete('/cart/clearCart', isAuthenticated, clearCart)
 
 apiRouter.get('/checkout', isAuthenticated, checkoutCart);
 //apiRouter.post('/cart/checkout', isAuthenticated)
