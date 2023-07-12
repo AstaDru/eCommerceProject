@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS users
     id character varying(50) PRIMARY KEY,
     name character varying(50) NOT NULL,
     surname character varying(50) NOT NULL,
-    email character varying(50) NOT NULL,
+    email character varying(50) UNIQUE NOT NULL,
     password character varying(50) NOT NULL,
     address character varying(200) NOT NULL
 );
