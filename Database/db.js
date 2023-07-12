@@ -80,7 +80,7 @@ const setUserAtr = (request, response) => {
             if (err) {
                 response.status(400).json({message:err.message, ...err})
             }
-            if (results.rows.length <= 0) {
+            else if (results.rows.length <= 0) {
                 response.status(404).json({message: "User not found"})
             }
             else {
@@ -120,7 +120,7 @@ const getItemByName = (request, response) => {
         if (err) {
             response.status(400).json({message:err.message, ...err})
         }
-        if (results.rows.length <= 0) {
+        else if (results.rows.length <= 0) {
             response.status(404).json({message: "Item not found"})
         }
         else {
@@ -129,12 +129,13 @@ const getItemByName = (request, response) => {
     });
 };
 
+
 const getCartsByUser = (request, response) => {
-    pool.query("SELECT * FROM cart_item WHERE order_id = (SELECT id FROM orders WHERE status = 'current' AND user_id = $1)",[request.session.user.id] , (err, results) => {       
+    pool.query("SELECT * FROM cart_items WHERE order_id = (SELECT id FROM orders WHERE status = 'current' AND user_id = $1)",[request.session.user.id] , (err, results) => {       
         if (err) {
             response.status(400).json({message:err.message, ...err})
         }
-        if (results.rows.length == 0) {
+        else if (results.rows.length == 0) {
             response.status(204).json({message: "Current cart is empty"})
         }
         else {
@@ -149,23 +150,20 @@ const addToCartByName = (request, response) => {
     const { itemName, quantity } = request.body;
   
     if (itemName && quantity) {
-        const command = `INSERT INTO cart_item (id, item_id, user_id, quantity, total_price_per_item, order_id) VALUES (
+        const command = `INSERT INTO cart_items (order_id, user_id, item_name, quantity, total_price) VALUES (
+            (SELECT id FROM orders WHERE user_id = $1::text AND status = 'current')::text,
             $1::text,
-            (SELECT id FROM items WHERE name = $2)::text,
-            $3::text,
-            $4::integer,
-            ($4::integer * (SELECT price FROM items WHERE name = $2)::integer)::integer,
-            (SELECT id FROM orders WHERE status = 'current' AND user_id = $3)::text
-        ) 
-        WHERE (SELECT * FROM cart_item WHERE item_id = (SELECT id FROM items WHERE name = $2)::text ) IS NULL
-        RETURNING * `;
-        const values = [uuid(), itemName, request.session.user.id, quantity];
+            $2::text,
+            $3::integer,
+            ($3::integer * (SELECT price FROM items WHERE name = $2)::integer)::integer)
+             RETURNING * `;
+        const values = [request.session.user.id, itemName, quantity];
         pool.query(command, values, (err, results) => {
             if (err) {
                 response.status(400).json({...err})
             }
             if (results.rows.length <= 0) {
-                response.status(404).json({message: "Something went wrong"})
+                response.status(404).json({message: "Item already exists or ..."})
             }
             else {
                 response.json({message: "Item successful added",...results.rows[0]})
@@ -181,32 +179,28 @@ const removeFromCartByName = (request, response) => {
     const { itemName} = request.body
 
     if (itemName) {
-        pool.query("DELETE FROM cart_item WHERE item_id = (SELECT id FROM items WHERE name = $1)::text AND order_id = (SELECT id FROM orders  WHERE status = 'current' AND user_id = $2)::text RETURNING *", [ itemName, request.session.user.id] , (err, results) => {
+            pool.query("DELETE FROM cart_items WHERE item_name = $1::text AND order_id = (SELECT id FROM orders  WHERE status = 'current' AND user_id = $2)::text RETURNING *", [ itemName, request.session.user.id] , (err, results) => {
             if (err) {
                 response.status(400).json({message:err.message, ...err})
-            }
-            if (results.rows.length <= 0) {
-                response.status(404).json({message: "Something went wrong"})
-            }
-            else {
-                response.json({message: "Item successfully removed",...results.rows[0]})
+            } else if (results.rows.length <= 0) {
+              response.status(404).json({message: "Something went wrong"})
+            } else {
+              response.json({message: "Item successfully removed",...results.rows[0]})
             }
         });
     } else {
         response.status(400).json({message: "Invalid values"});
     }
 };
-
-
 const clearCart = (request, response) => {
     // UPDATE SCHEMA add item_name to cart_item
-    pool.query("DELETE FROM cart_item WHERE order_id = (SELECT id FROM orders WHERE user_id = $1 AND status ='current')::text  RETURNING *", [request.session.user.id], (err, results)=> {
-        if (err) {
-            response.status(400).json({message:err.message, ...err})
-        } else {
-            response.status(204).json({message: "Cart item successful deleted"});
-        }
-    });
+        pool.query("DELETE FROM cart_items WHERE order_id = (SELECT id FROM orders WHERE user_id = $1 AND status ='current')::text", [request.session.user.id], (err, results)=> {
+            if (err) {
+                response.status(400).json({message:err.message, ...err})
+            } else {
+                response.status(204).json({message: "Cart item successful deleted"});
+            };
+        })
 };
 
 const changeCartItemQuantityByName = (request, response) => {
@@ -217,11 +211,11 @@ const changeCartItemQuantityByName = (request, response) => {
         removeFromCartByName(request, response)
     }
     if (itemName && quantity) {
-        pool.query('UPDATE cart_item SET quantity = $1 WHERE item_id = (SELECT id FROM items WHERE name = $2)::text AND quantity <= (SELECT quantity FROM items WHERE name = $3)::int RETURNING *', [quantity, itemName, itemName], (err, results) =>{
+        pool.query('UPDATE cart_items SET quantity = $1::text WHERE item_name = $2::text AND quantity <= (SELECT quantity FROM items WHERE name = $3::text)::int RETURNING *', [quantity, itemName], (err, results) =>{
             if (err) {
                 response.status(400).json({message:err.message, ...err})
             }
-            if (results.rows.length <= 0) {
+            else if (results.rows.length <= 0) {
                 response.status(404).json({message: "Item not found"})
             }
             else {
@@ -245,7 +239,7 @@ const checkoutCart = (request, response) => {
         if (err) {
             response.status(400).json({message: err.message, ...err});
         } 
-        if (results.rows.length == 0) {
+        else if (results.rows.length == 0) {
             response.json({message: 'No content found'});
         } else {
             response.send(results.rows);
@@ -260,7 +254,7 @@ const getOrders = (request, response) => {
         if (err) {
             response.status(400).json({message: err.message, ...err});
         } 
-        if (results.rows.length == 0) {
+        else if (results.rows.length == 0) {
             response.json({message: 'No content found'});
         } else {
             response.send(results.rows);
