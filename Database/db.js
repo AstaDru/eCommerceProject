@@ -40,7 +40,7 @@ const getUserByEmail = (request, response) => {
                 return response.status(404).json({message: err.message,  ...err})
             }
             //user not found
-            else if (results.rows.length == 0) {
+            if (results.rows.length == 0) {
                 return response.status(404).json({message: "User Not found"})
             }
             const dbPassword = (results.rows[0]) ? results.rows[0].password: null;
@@ -152,21 +152,18 @@ const addToCartByName = (request, response) => {
     if (itemName && quantity) {
         const command = `INSERT INTO cart_items (order_id, user_id, item_name, quantity, total_price) VALUES (
             (SELECT id FROM orders WHERE user_id = $1::text AND status = 'current')::text,
+            $1::text,
             $2::text,
-            $3::text,
-            $4::integer,
-            ($5::integer * (SELECT price FROM items WHERE name = $6)::integer)::integer)
+            $3::integer,
+            ($3::integer * (SELECT price FROM items WHERE name = $2)::integer)::integer)
              RETURNING * `;
-        // Type Error when passing query to SQL 
-        const values = [request.session.user.id, request.session.user.id,itemName,  quantity,quantity, itemName ];
+        const values = [request.session.user.id, itemName, quantity];
         pool.query(command, values, (err, results) => {
-            console.log(results);
-            
             if (err) {
                 response.status(400).json({...err})
             }
-            else if (results.rows.length <= 0) {
-                response.status(404).json({message: "Something went wrong"})
+            if (results.rows.length <= 0) {
+                response.status(404).json({message: "Item already exists or ..."})
             }
             else {
                 response.json({message: "Item successful added",...results.rows[0]})
@@ -183,16 +180,12 @@ const removeFromCartByName = (request, response) => {
 
     if (itemName) {
             pool.query("DELETE FROM cart_items WHERE item_name = $1::text AND order_id = (SELECT id FROM orders  WHERE status = 'current' AND user_id = $2)::text RETURNING *", [ itemName, request.session.user.id] , (err, results) => {
-
-        console.log(results)
             if (err) {
                 response.status(400).json({message:err.message, ...err})
-            }
-            else if (results.rows.length <= 0) {
+            } else if (results.rows.length <= 0) {
               response.status(404).json({message: "Something went wrong"})
-            }
-            else {
-                response.json({message: "Item successfully removed",...results.rows[0]})
+            } else {
+              response.json({message: "Item successfully removed",...results.rows[0]})
             }
         });
     } else {
@@ -201,15 +194,13 @@ const removeFromCartByName = (request, response) => {
 };
 const clearCart = (request, response) => {
     // UPDATE SCHEMA add item_name to cart_item
-    
-        pool.query("DELETE FROM cart_items WHERE order_id = (SELECT id FROM orders WHERE user_id = $1 AND status ='current')::text  RETURNING *", [request.session.user.id], (err, results)=> {
+        pool.query("DELETE FROM cart_items WHERE order_id = (SELECT id FROM orders WHERE user_id = $1 AND status ='current')::text", [request.session.user.id], (err, results)=> {
             if (err) {
                 response.status(400).json({message:err.message, ...err})
             } else {
                 response.status(204).json({message: "Cart item successful deleted"});
             };
         })
-    
 };
 
 const changeCartItemQuantityByName = (request, response) => {
@@ -220,7 +211,7 @@ const changeCartItemQuantityByName = (request, response) => {
         removeFromCartByName(request, response)
     }
     if (itemName && quantity) {
-        pool.query('UPDATE cart_items SET quantity = $1 WHERE item_name = $2::text AND quantity <= (SELECT quantity FROM items WHERE name = $3)::int RETURNING *', [quantity, itemName, itemName], (err, results) =>{
+        pool.query('UPDATE cart_items SET quantity = $1::text WHERE item_name = $2::text AND quantity <= (SELECT quantity FROM items WHERE name = $3::text)::int RETURNING *', [quantity, itemName], (err, results) =>{
             if (err) {
                 response.status(400).json({message:err.message, ...err})
             }
