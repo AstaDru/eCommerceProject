@@ -1,7 +1,7 @@
 // CRUD on products db
-
 const { Pool } = require('pg');
- const uuid  = require('uuid').v4;
+const uuid  = require('uuid').v4;
+
 // Set n Get data from the .env file
 require('dotenv').config(); // https://www.freecodecamp.org/news/how-to-use-node-environment-variables-with-a-dotenv-file-for-node-js-and-npm/
 const pgHOST = process.env.pgHOST;
@@ -34,27 +34,32 @@ const createUser =  (request, response) => {
 const getUserByEmail = (request, response) => {
     // get user by email from users and compare password for auth
     const { email, password } = request.body;
-    pool.query('SELECT * FROM users WHERE email = $1', [email], (err, results) => {
-        if (err) {
-            return response.status(404).json({message: err.message,  ...err})
-        }
-        //user not found
-        if (results.rows.length == 0) {
-            return response.status(404).json({message: "User Not found"})
-        }
-        const dbPassword = (results.rows[0]) ? results.rows[0].password: null;
-        const inputPassword = password || null;
-        if (dbPassword === inputPassword) {
-            // send user a auth TOKEN across session
-            request.session.authenticated = true;
-            request.session.user = {...results.rows[0]};
-
-            response.json({message: "Login successful",...results.rows[0]})
-        } else {
-            // Wrong password
-            response.status(400).json({message: 'Wrong password'})
-        }
-    });
+    if (email && password) {
+        pool.query('SELECT * FROM users WHERE email = $1', [email], (err, results) => {
+            if (err) {
+                return response.status(404).json({message: err.message,  ...err})
+            }
+            //user not found
+            if (results.rows.length == 0) {
+                return response.status(404).json({message: "User Not found"})
+            }
+            const dbPassword = (results.rows[0]) ? results.rows[0].password: null;
+            const inputPassword = password || null;
+            if (dbPassword === inputPassword) {
+                // send user a auth TOKEN across session
+                request.session.authenticated = true;
+                const { id, name, surname, email } = results.rows[0];
+                request.session.user = {id, name, surname, email};
+    
+                response.json({message: "Login successful",...results.rows[0]})
+            } else {
+                // Wrong password
+                response.status(400).json({message: 'Wrong password'})
+            }
+        });
+    } else {
+        response.status(404).json({message: "Invalid attribute on user"})
+    }
 };
 
 const setUserAtr = (request, response) => {
@@ -125,9 +130,7 @@ const getItemByName = (request, response) => {
 };
 
 const getCartsByUser = (request, response) => {
-    pool.query("SELECT * FROM cart_item WHERE order_id = (SELECT id FROM orders WHERE status = 'current' AND user_id = $1)",[request.session.user.id] , (err, results) => {
-       console.log(results);
-       
+    pool.query("SELECT * FROM cart_item WHERE order_id = (SELECT id FROM orders WHERE status = 'current' AND user_id = $1)",[request.session.user.id] , (err, results) => {       
         if (err) {
             response.status(400).json({message:err.message, ...err})
         }
@@ -153,8 +156,9 @@ const addToCartByName = (request, response) => {
             $4::integer,
             ($4::integer * (SELECT price FROM items WHERE name = $2)::integer)::integer,
             (SELECT id FROM orders WHERE status = 'current' AND user_id = $3)::text
-        ) RETURNING * `;
-        // Type Error when passing query to SQL 
+        ) 
+        WHERE (SELECT * FROM cart_item WHERE item_id = (SELECT id FROM items WHERE name = $2)::text ) IS NULL
+        RETURNING * `;
         const values = [uuid(), itemName, request.session.user.id, quantity];
         pool.query(command, values, (err, results) => {
             if (err) {
@@ -177,14 +181,12 @@ const removeFromCartByName = (request, response) => {
     const { itemName} = request.body
 
     if (itemName) {
-            pool.query("DELETE FROM cart_item WHERE item_id = (SELECT id FROM items WHERE name = $1)::text AND order_id = (SELECT id FROM orders  WHERE status = 'current' AND user_id = $2)::text RETURNING *", [ itemName, request.session.user.id] , (err, results) => {
-
-        console.log(results)
+        pool.query("DELETE FROM cart_item WHERE item_id = (SELECT id FROM items WHERE name = $1)::text AND order_id = (SELECT id FROM orders  WHERE status = 'current' AND user_id = $2)::text RETURNING *", [ itemName, request.session.user.id] , (err, results) => {
             if (err) {
                 response.status(400).json({message:err.message, ...err})
             }
             if (results.rows.length <= 0) {
-              response.status(404).json({message: "Something went wrong"})
+                response.status(404).json({message: "Something went wrong"})
             }
             else {
                 response.json({message: "Item successfully removed",...results.rows[0]})
@@ -198,31 +200,24 @@ const removeFromCartByName = (request, response) => {
 
 const clearCart = (request, response) => {
     // UPDATE SCHEMA add item_name to cart_item
-    
-        pool.query("DELETE FROM cart_item WHERE order_id = (SELECT id FROM orders WHERE user_id = $1 AND status ='current')::text  RETURNING *", [request.session.user.id], (err, results)=> {
-            if (err) {
-                response.status(400).json({message:err.message, ...err})
-            } else {
-                response.status(204).json({message: "Cart item successful deleted"});
-            };
-        })
-    
+    pool.query("DELETE FROM cart_item WHERE order_id = (SELECT id FROM orders WHERE user_id = $1 AND status ='current')::text  RETURNING *", [request.session.user.id], (err, results)=> {
+        if (err) {
+            response.status(400).json({message:err.message, ...err})
+        } else {
+            response.status(204).json({message: "Cart item successful deleted"});
+        }
+    });
 };
 
 const changeCartItemQuantityByName = (request, response) => {
     // UPDATE SCHEMA cart_item.item_id Must be UINQUE
     const { itemName, quantity } = request.body;
-   console.log('items ' + JSON.stringify(response.body));
-   
-    if (itemName && quantity) {
- if (quantity == 0){
-    removeFromCartByName(request, response)
 
+    if (quantity == 0){
+        removeFromCartByName(request, response)
     }
-    else {
+    if (itemName && quantity) {
         pool.query('UPDATE cart_item SET quantity = $1 WHERE item_id = (SELECT id FROM items WHERE name = $2)::text AND quantity <= (SELECT quantity FROM items WHERE name = $3)::int RETURNING *', [quantity, itemName, itemName], (err, results) =>{
-            console.log(results);
-            
             if (err) {
                 response.status(400).json({message:err.message, ...err})
             }
@@ -233,19 +228,18 @@ const changeCartItemQuantityByName = (request, response) => {
                 response.json({message: "Quantity successful updated",...results.rows[0]})
             }
         })
-    }
-
-        
     } else {
         response.status(400).json({message: "Invalid values"})
     }
 };
 
 const checkoutCart = (request, response) => {
-    // update SCHEMA orders.status [data type] # currently only shows first letter (might currently have [char] type)
-    // update SCHEMA add trigger to create new when order.status = 'completed'
-    // SUM(price), SUM(quantity)
-    const command = "UPDATE orders SET status = 'processed' WHERE status = 'current' AND user_id = $1::text RETURNING *";
+    // calculate SUM(price), SUM(quantity)
+    const command = `UPDATE orders 
+        SET status = 'processed',
+        total_price = (SELECT SUM(total_price) FROM cart_items)::int,
+        total_quantity = (SELECT SUM(quantity) FROM cart_items)::int
+        WHERE status = 'current' AND user_id = $1::text RETURNING *`;
     const values = [request.session.user.id];
     pool.query(command, values, (err, results) => {
         if (err) {
@@ -279,14 +273,16 @@ module.exports = {
     getUserByEmail,
     setUserAtr,
     deleteUser,
+
     getShopItems,
     getItemByName,
+    
     getCartsByUser,
     addToCartByName,
     removeFromCartByName,
+    clearCart,
     changeCartItemQuantityByName,
+    
     checkoutCart,
     getOrders,
-    clearCart
-
 };
