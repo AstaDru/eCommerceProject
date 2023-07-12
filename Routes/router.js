@@ -12,6 +12,7 @@ const {
     getItemByName,
     
     getCartsByUser,
+    getCartById,
     addToCartByName,
     removeFromCartByName,
     changeCartItemQuantityByName,
@@ -72,6 +73,8 @@ apiRouter.put('/cart/changeqty', isAuthenticated, changeCartItemQuantityByName)
 apiRouter.delete('/cart/clear', isAuthenticated, clearCart)
 
 apiRouter.get('/cart/checkout', isAuthenticated, checkoutCart);
+
+apiRouter.get('/cart/:cartId', isAuthenticated, getCartById);
 
 apiRouter.get('/orders', isAuthenticated, getOrders);
 
