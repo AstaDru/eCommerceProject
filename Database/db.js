@@ -17,10 +17,10 @@ const pool = new Pool({
 });
 
 const createUser =  (request, response) => {
-    const {name, surname, email, password} = request.body;
-    const addressId = 7176;
-    const command = 'INSERT INTO users (id, name, surname, email, password, address_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *';
-    const values = [uuid(), name, surname, email, password, addressId];
+    const {name, surname, email, password, address} = request.body;
+    
+    const command = 'INSERT INTO users (id, name, surname, email, password, address) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *';
+    const values = [uuid(), name, surname, email, password, address];
     
     pool.query(command, values, (err, results) => {
         if (!err) {
@@ -148,22 +148,34 @@ const addToCartByName = (request, response) => {
     // if cart item name already exists with current order id, then update existing cart item ####
     // if cart_item.item_id Already exist increase quantity or redirect to '/cart/changeqty' 
     const { itemName, quantity } = request.body;
-  
+ 
     if (itemName && quantity) {
-        const command = `INSERT INTO cart_items (order_id, user_id, item_name, quantity, total_price) VALUES (
+        const command = `
+        INSERT INTO cart_items (order_id, user_id, item_name, quantity, total_price) VALUES (
             (SELECT id FROM orders WHERE user_id = $1::text AND status = 'current')::text,
             $2::text,
             $3::text,
             $4::integer,
             ($5::integer * (SELECT price FROM items WHERE name = $6)::integer)::integer)
-             RETURNING * `;
+            RETURNING *
+        `
+        /*DO $$DECLARE i items;
+        BEGIN
+        IF  $1 <= (SELECT quantity FROM i WHERE name = $2);
+        
+           END IF;
+           END$$ ;
+           const values = [quantity, itemName ];*/
         // Type Error when passing query to SQL 
-        const values = [request.session.user.id, request.session.user.id,itemName,  quantity,quantity, itemName ];
+        const values = [request.session.user.id, request.session.user.id, itemName,  quantity,quantity, itemName ];
         pool.query(command, values, (err, results) => {
             console.log(results);
             
             if (err) {
-                response.status(400).json({...err})
+               
+                    response.status(400).json({message : err.message})
+                
+                
             }
             else if (results.rows.length <= 0) {
                 response.status(404).json({message: "Something went wrong"})
