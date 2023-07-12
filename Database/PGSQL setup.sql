@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS users
     id character varying(50) PRIMARY KEY,
     name character varying(50) NOT NULL,
     surname character varying(50) NOT NULL,
-    email character varying(50) UNIQUE NOT NULL,
+    email character varying(50) NOT NULL UNIQUE,
     password character varying(50) NOT NULL,
     address character varying(200) NOT NULL
 );
@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS users
 CREATE TABLE IF NOT EXISTS orders
 (
     id character varying(50) PRIMARY KEY,
-    user_id character varying(50) REFERENCES users(id),
+    user_id character varying(50),
     status character varying(20) NOT NULL,
     total_quantity integer,
     total_price integer
@@ -31,9 +31,9 @@ CREATE TABLE IF NOT EXISTS items
 
 CREATE TABLE IF NOT EXISTS cart_items
 (
-    order_id character varying(50) REFERENCES orders(id),
-    user_id character varying(50) REFERENCES users(id),
-    item_name character varying(50) REFERENCES items(name),
+    order_id character varying(50),
+    user_id character varying(50),
+    item_name character varying(50),
     PRIMARY KEY (order_id, item_name),
     quantity integer,
     total_price integer
@@ -51,11 +51,13 @@ CREATE TABLE IF NOT EXISTS shop
 
 -- ALTER
 
+ALTER TABLE IF EXISTS users
+    ADD UNIQUE (email);
+
 ALTER TABLE IF EXISTS orders
     ADD FOREIGN KEY (user_id)
     REFERENCES users(id)
     ON DELETE CASCADE;
-
 
 
 ALTER TABLE IF EXISTS cart_items
@@ -160,8 +162,5 @@ INSERT INTO items VALUES ('rock', 1000, 50, 'The most stable object');
 
 INSERT INTO users VALUES ('usrid', 'testName', 'testSurname', 'a@b.c', '1234', '22 Jump str');
 
---INSERT INTO cart_items VALUES ('8d1ea4b4-a8b9-43f7-86b1-13a221d1e11a', 'usrid', 'banana', 7, 30);
-
---INSERT INTO orders VALUES ('theorder66', 'usrid', 'current', 0, 0);
 
 END;
