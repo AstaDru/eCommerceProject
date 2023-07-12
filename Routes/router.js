@@ -2,7 +2,24 @@
 const express = require('express');
 const session = require('express-session');
 
-const { createUser, getUserByEmail, setUserAtr, deleteUser, getShopItems, getItemByName, getCartsByUser, addToCartByName, removeFromCartByName, changeCartItemQuantityByName, checkoutCart, getOrders, clearCart } = require('../Database/db');
+const { 
+    createUser,
+    getUserByEmail,
+    setUserAtr,
+    deleteUser,
+
+    getShopItems,
+    getItemByName,
+    
+    getCartsByUser,
+    addToCartByName,
+    removeFromCartByName,
+    changeCartItemQuantityByName,
+    clearCart,
+    
+    checkoutCart,
+    getOrders
+} = require('../Database/db');
 
 const apiRouter = express.Router();
 
@@ -17,13 +34,6 @@ apiRouter.use(session({
     resave: false,
     store
 }));
-
-
-apiRouter.use((req, res, next)=>{
-    // Request Logger
-    
-    next();
-})
 
 const isAuthenticated = (req, res, next) => {
     if (req.session.authenticated) {
@@ -53,19 +63,16 @@ apiRouter.get('/browse/:itemName', getItemByName);
 
 apiRouter.get('/cart', isAuthenticated, getCartsByUser);
 
-//apiRouter.post('/addtocart', isAuthenticated, addToCartByName)
 apiRouter.post('/cart/additem', isAuthenticated, addToCartByName)
 
-apiRouter.delete('/cart/removefromcart', isAuthenticated, removeFromCartByName)
+apiRouter.delete('/cart/removeitem', isAuthenticated, removeFromCartByName)
 
 apiRouter.put('/cart/changeqty', isAuthenticated, changeCartItemQuantityByName)
 
-apiRouter.delete('/cart/clearCart', isAuthenticated, clearCart)
+apiRouter.delete('/cart/clear', isAuthenticated, clearCart)
 
-apiRouter.get('/checkout', isAuthenticated, checkoutCart);
-//apiRouter.post('/cart/checkout', isAuthenticated)
+apiRouter.get('/cart/checkout', isAuthenticated, checkoutCart);
 
 apiRouter.get('/orders', isAuthenticated, getOrders);
-
 
 module.exports = apiRouter
