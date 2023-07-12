@@ -1,7 +1,7 @@
 // CRUD on products db
-
 const { Pool } = require('pg');
- const uuid  = require('uuid').v4;
+const uuid  = require('uuid').v4;
+
 // Set n Get data from the .env file
 require('dotenv').config(); // https://www.freecodecamp.org/news/how-to-use-node-environment-variables-with-a-dotenv-file-for-node-js-and-npm/
 const pgHOST = process.env.pgHOST;
@@ -34,27 +34,32 @@ const createUser =  (request, response) => {
 const getUserByEmail = (request, response) => {
     // get user by email from users and compare password for auth
     const { email, password } = request.body;
-    pool.query('SELECT * FROM users WHERE email = $1', [email], (err, results) => {
-        if (err) {
-            return response.status(404).json({message: err.message,  ...err})
-        }
-        //user not found
-        if (results.rows.length == 0) {
-            return response.status(404).json({message: "User Not found"})
-        }
-        const dbPassword = (results.rows[0]) ? results.rows[0].password: null;
-        const inputPassword = password || null;
-        if (dbPassword === inputPassword) {
-            // send user a auth TOKEN across session
-            request.session.authenticated = true;
-            request.session.user = {...results.rows[0]};
-
-            response.json({message: "Login successful",...results.rows[0]})
-        } else {
-            // Wrong password
-            response.status(400).json({message: 'Wrong password'})
-        }
-    });
+    if (email && password) {
+        pool.query('SELECT * FROM users WHERE email = $1', [email], (err, results) => {
+            if (err) {
+                return response.status(404).json({message: err.message,  ...err})
+            }
+            //user not found
+            else if (results.rows.length == 0) {
+                return response.status(404).json({message: "User Not found"})
+            }
+            const dbPassword = (results.rows[0]) ? results.rows[0].password: null;
+            const inputPassword = password || null;
+            if (dbPassword === inputPassword) {
+                // send user a auth TOKEN across session
+                request.session.authenticated = true;
+                const { id, name, surname, email } = results.rows[0];
+                request.session.user = {id, name, surname, email};
+    
+                response.json({message: "Login successful",...results.rows[0]})
+            } else {
+                // Wrong password
+                response.status(400).json({message: 'Wrong password'})
+            }
+        });
+    } else {
+        response.status(404).json({message: "Invalid attribute on user"})
+    }
 };
 
 const setUserAtr = (request, response) => {
@@ -75,7 +80,7 @@ const setUserAtr = (request, response) => {
             if (err) {
                 response.status(400).json({message:err.message, ...err})
             }
-            if (results.rows.length <= 0) {
+            else if (results.rows.length <= 0) {
                 response.status(404).json({message: "User not found"})
             }
             else {
@@ -115,7 +120,7 @@ const getItemByName = (request, response) => {
         if (err) {
             response.status(400).json({message:err.message, ...err})
         }
-        if (results.rows.length <= 0) {
+        else if (results.rows.length <= 0) {
             response.status(404).json({message: "Item not found"})
         }
         else {
@@ -124,14 +129,13 @@ const getItemByName = (request, response) => {
     });
 };
 
+
 const getCartsByUser = (request, response) => {
-    pool.query("SELECT * FROM cart_item WHERE order_id = (SELECT id FROM orders WHERE status = 'current' AND user_id = $1)",[request.session.user.id] , (err, results) => {
-       console.log(results);
-       
+    pool.query("SELECT * FROM cart_items WHERE order_id = (SELECT id FROM orders WHERE status = 'current' AND user_id = $1)",[request.session.user.id] , (err, results) => {       
         if (err) {
             response.status(400).json({message:err.message, ...err})
         }
-        if (results.rows.length == 0) {
+        else if (results.rows.length == 0) {
             response.status(204).json({message: "Current cart is empty"})
         }
         else {
@@ -146,21 +150,22 @@ const addToCartByName = (request, response) => {
     const { itemName, quantity } = request.body;
   
     if (itemName && quantity) {
-        const command = `INSERT INTO cart_item (id, item_id, user_id, quantity, total_price_per_item, order_id) VALUES (
-            $1::text,
-            (SELECT id FROM items WHERE name = $2)::text,
+        const command = `INSERT INTO cart_items (order_id, user_id, item_name, quantity, total_price) VALUES (
+            (SELECT id FROM orders WHERE user_id = $1::text AND status = 'current')::text,
+            $2::text,
             $3::text,
             $4::integer,
-            ($4::integer * (SELECT price FROM items WHERE name = $2)::integer)::integer,
-            (SELECT id FROM orders WHERE status = 'current' AND user_id = $3)::text
-        ) RETURNING * `;
+            ($5::integer * (SELECT price FROM items WHERE name = $6)::integer)::integer)
+             RETURNING * `;
         // Type Error when passing query to SQL 
-        const values = [uuid(), itemName, request.session.user.id, quantity];
+        const values = [request.session.user.id, request.session.user.id,itemName,  quantity,quantity, itemName ];
         pool.query(command, values, (err, results) => {
+            console.log(results);
+            
             if (err) {
                 response.status(400).json({...err})
             }
-            if (results.rows.length <= 0) {
+            else if (results.rows.length <= 0) {
                 response.status(404).json({message: "Something went wrong"})
             }
             else {
@@ -177,13 +182,13 @@ const removeFromCartByName = (request, response) => {
     const { itemName} = request.body
 
     if (itemName) {
-            pool.query("DELETE FROM cart_item WHERE item_id = (SELECT id FROM items WHERE name = $1)::text AND order_id = (SELECT id FROM orders  WHERE status = 'current' AND user_id = $2)::text RETURNING *", [ itemName, request.session.user.id] , (err, results) => {
+            pool.query("DELETE FROM cart_items WHERE item_name = $1::text AND order_id = (SELECT id FROM orders  WHERE status = 'current' AND user_id = $2)::text RETURNING *", [ itemName, request.session.user.id] , (err, results) => {
 
         console.log(results)
             if (err) {
                 response.status(400).json({message:err.message, ...err})
             }
-            if (results.rows.length <= 0) {
+            else if (results.rows.length <= 0) {
               response.status(404).json({message: "Something went wrong"})
             }
             else {
@@ -194,12 +199,10 @@ const removeFromCartByName = (request, response) => {
         response.status(400).json({message: "Invalid values"});
     }
 };
-
-
 const clearCart = (request, response) => {
     // UPDATE SCHEMA add item_name to cart_item
     
-        pool.query("DELETE FROM cart_item WHERE order_id = (SELECT id FROM orders WHERE user_id = $1 AND status ='current')::text  RETURNING *", [request.session.user.id], (err, results)=> {
+        pool.query("DELETE FROM cart_items WHERE order_id = (SELECT id FROM orders WHERE user_id = $1 AND status ='current')::text  RETURNING *", [request.session.user.id], (err, results)=> {
             if (err) {
                 response.status(400).json({message:err.message, ...err})
             } else {
@@ -212,46 +215,40 @@ const clearCart = (request, response) => {
 const changeCartItemQuantityByName = (request, response) => {
     // UPDATE SCHEMA cart_item.item_id Must be UINQUE
     const { itemName, quantity } = request.body;
-   console.log('items ' + JSON.stringify(response.body));
-   
-    if (itemName && quantity) {
- if (quantity == 0){
-    removeFromCartByName(request, response)
 
+    if (quantity == 0){
+        removeFromCartByName(request, response)
     }
-    else {
-        pool.query('UPDATE cart_item SET quantity = $1 WHERE item_id = (SELECT id FROM items WHERE name = $2)::text AND quantity <= (SELECT quantity FROM items WHERE name = $3)::int RETURNING *', [quantity, itemName, itemName], (err, results) =>{
-            console.log(results);
-            
+    if (itemName && quantity) {
+        pool.query('UPDATE cart_items SET quantity = $1 WHERE item_name = $2::text AND quantity <= (SELECT quantity FROM items WHERE name = $3)::int RETURNING *', [quantity, itemName, itemName], (err, results) =>{
             if (err) {
                 response.status(400).json({message:err.message, ...err})
             }
-            if (results.rows.length <= 0) {
+            else if (results.rows.length <= 0) {
                 response.status(404).json({message: "Item not found"})
             }
             else {
                 response.json({message: "Quantity successful updated",...results.rows[0]})
             }
         })
-    }
-
-        
     } else {
         response.status(400).json({message: "Invalid values"})
     }
 };
 
 const checkoutCart = (request, response) => {
-    // update SCHEMA orders.status [data type] # currently only shows first letter (might currently have [char] type)
-    // update SCHEMA add trigger to create new when order.status = 'completed'
-    // SUM(price), SUM(quantity)
-    const command = "UPDATE orders SET status = 'processed' WHERE status = 'current' AND user_id = $1::text RETURNING *";
+    // calculate SUM(price), SUM(quantity)
+    const command = `UPDATE orders 
+        SET status = 'processed',
+        total_price = (SELECT SUM(total_price) FROM cart_items)::int,
+        total_quantity = (SELECT SUM(quantity) FROM cart_items)::int
+        WHERE status = 'current' AND user_id = $1::text RETURNING *`;
     const values = [request.session.user.id];
     pool.query(command, values, (err, results) => {
         if (err) {
             response.status(400).json({message: err.message, ...err});
         } 
-        if (results.rows.length == 0) {
+        else if (results.rows.length == 0) {
             response.json({message: 'No content found'});
         } else {
             response.send(results.rows);
@@ -266,7 +263,7 @@ const getOrders = (request, response) => {
         if (err) {
             response.status(400).json({message: err.message, ...err});
         } 
-        if (results.rows.length == 0) {
+        else if (results.rows.length == 0) {
             response.json({message: 'No content found'});
         } else {
             response.send(results.rows);
@@ -279,14 +276,16 @@ module.exports = {
     getUserByEmail,
     setUserAtr,
     deleteUser,
+
     getShopItems,
     getItemByName,
+    
     getCartsByUser,
     addToCartByName,
     removeFromCartByName,
+    clearCart,
     changeCartItemQuantityByName,
+    
     checkoutCart,
     getOrders,
-    clearCart
-
 };

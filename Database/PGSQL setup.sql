@@ -141,25 +141,6 @@ CREATE OR REPLACE TRIGGER quantity_after_checkout
     EXECUTE FUNCTION reduce_items();
 
 
--- Creates totals for price and quantity on checkout
--- Still in DEV
-CREATE OR REPLACE FUNCTION sum_order() RETURNS TRIGGER AS $$
-    BEGIN
-        UPDATE orders 
-		set total_price = (SELECT SUM(total_price) FROM cart_items),
-		total_quantity = (SELECT SUM(quantity) FROM cart_items)
-		WHERE status = 'current';
-        RETURN NEW;
-    END;
-$$ LANGUAGE PLPGSQL;
-
-CREATE OR REPLACE TRIGGER checkout_total
-    BEFORE UPDATE 
-    ON orders
-    FOR EACH ROW
-    WHEN (NEW.status = 'completed')
-    EXECUTE FUNCTION sum_order();
-
 -----------------------------------------------------------------------------------------------------
 -----------------------------------------------------------------------------------------------------
 -- POPULATING ITEMS 
