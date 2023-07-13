@@ -1,0 +1,162 @@
+openapi: 3.0.1
+paths:
+  /api/browse:
+    summary: get items array
+    description: Returns an Array of all items in shop as objects
+    get:
+      summary: get all items
+      description: returns a list with all items in a shop
+      operationId: browse
+      responses:
+        default:
+          description: Default error sample response
+      tags:
+        - getAllItems
+  /api/browse?{name}:
+    summary: get item by name
+    description: ' Returns an item object by {name} which is passed as a url param'
+    get:
+      summary: get item
+      description: get item by name from shop items
+      operationId: browse_name
+      responses:
+        default:
+          description: Default error sample response
+      tags:
+        - browseName
+  /api/register:
+    summary: post new user
+    description: 'Creates a new user account and returns the user object '
+    post:
+      summary: post to create user account
+      description: 'creates new user account '
+      operationId: register
+      responses:
+        default:
+          description: Default error sample response
+      tags:
+        - createUser
+  /api/login:
+    summary: post login details
+    description: ' authenticates the user by fetching account using email'
+    post:
+      summary: post login details
+      description: authenticates the user by fetching account using email
+      operationId: login
+      responses:
+        default:
+          description: Default error sample response
+      tags:
+        - loginUser
+  /api/settings:
+    summary: put update user details
+    description: >-
+      takes in to values {attribute: string, value: string } where attribute
+      represents the users attribute key and value as the new value.
+    put:
+      summary: put update user details
+      description: >-
+        takes in to values {attribute: string, value: string } where attribute
+        represents the users attribute key and value as the new value.
+      operationId: settings
+      responses:
+        default:
+          description: Default error sample response
+      tags:
+        - updateUserDetails
+  /api/deleteuser:
+    summary: delete user account
+    description: ' Deletes user using id of current session user'
+    delete:
+      summary: delete user
+      description: Deletes user using id of current session user
+      operationId: deleteUser
+      responses:
+        default:
+          description: Default error sample response
+      tags:
+        - deleteUserAccount
+  /api/cart:
+    summary: get cart items
+    description: Returns an Array of all items in cart as objects
+    get:
+      summary: get users cart items
+      description: Returns an Array of all items in cart as objects
+      operationId: cart
+      responses:
+        default:
+          description: Default error sample response
+      tags:
+        - cartItems
+  /api/cart/additem:
+    summary: post cart item
+    description: ' adds an item from items to a cart'
+    post:
+      summary: 'post item to a cart '
+      description: 'adds an item from items to cart '
+      operationId: addItem
+      responses:
+        default:
+          description: Default error sample response
+      tags:
+        - addCartItem
+  /api/cart/changeqty:
+    summary: 'put updates cart item quantity '
+    description: 'Set new quantity of the item in a cart '
+    put:
+      summary: put update cart item quantity
+      description: 'Set new quantity of item in cart '
+      operationId: changeQty
+      responses:
+        default:
+          description: Default error sample response
+      tags:
+        - changeCartItemQty
+  /api/cart/removeitem:
+    summary: deletes item from a cart
+    description: removes item from a cart by name
+    delete:
+      summary: delete cart item
+      description: 'remove an item from users cart '
+      operationId: removeItem
+      responses:
+        default:
+          description: Default error sample response
+      tags:
+        - removeCartItem
+  /api/cart/clear:
+    summary: deletes all cart items
+    description: Removes all items inside of the cart
+    delete:
+      summary: delete cart
+      description: removes all items in a cart
+      operationId: clear
+      responses:
+        default:
+          description: Default error sample response
+      tags:
+        - removeCart
+  /api/cart/checkout:
+    summary: get generated checkout order
+    description: makes an order with all current cart items, returning the order id
+    get:
+      summary: get generated order for checkout
+      description: makes an order with all current cart items, returning the order id
+      operationId: checkout
+      responses:
+        default:
+          description: Default error sample response
+      tags:
+        - userCheckout
+  /api/orders:
+    summary: get all user orders
+    description: Returns an Array of all orders made by user
+    get:
+      summary: get all orders
+      description: ' Returns an Array of all orders made by user'
+      operationId: orders
+      responses:
+        default:
+          description: Default error sample response
+      tags:
+        - userOrders
