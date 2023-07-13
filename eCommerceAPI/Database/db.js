@@ -8,6 +8,11 @@ const pgHOST = process.env.pgHOST;
 const pgUSER = process.env.pgUSER
 const pgPASSWORD = process.env.pgPASSWORD;
 
+if (!pgHOST || !pgUSER || !pgPASSWORD) {
+    // Prevents connection if HOST, USER, PASSWORD are not set
+    throw Error("Setup .env file or replace pg{HOST, USER, PASSWORD} values")
+}
+
 const pool = new Pool({
     host: pgHOST,
     user: pgUSER,
@@ -48,8 +53,7 @@ const getUserByEmail = (request, response) => {
                 return response.status(404).json({message: "User Not found"})
             }
             const dbPassword = (results.rows[0]) ? results.rows[0].password: null;
-            const inputPassword = password || null;
-            if (dbPassword === inputPassword) {
+            if (dbPassword === password) {
                 // send user a auth TOKEN across session
                 request.session.authenticated = true;
                 const { id, name, surname, email, address } = results.rows[0];
