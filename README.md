@@ -3,10 +3,39 @@
 
 ## Project Description ##
 
-This project became alive because Me and Sironi had to create an API E-Commerce project from our Web Development course. With this in mind we have decided to build a shop. Our first step was to design ERD that made our project to go smoother with visualising how our code suppose to be implemented. Accordingly to our ERD below there are <--##################### still to finish it>
+This project became alive because Me and Sironi had to create an REST API E-Commerce project from our Web Development course. With this in mind we have decided to build a shop. Our first step was to design ERD that made our project to go smoother with visualising how our code suppose to be implemented. Accordingly to our ERD below there are shop, items, cart_items, users and orders tables.Routes avaliable:
+1. /register
+    * For creating new user account. Adding all given information to users table.
+2. /login
+    * For logging users in, comparing their given email and password with our database users in users table. If they are correct we are authenticating them using express sessions.
+3. /logout
+    * For logging user out, we ending express session.
+4. /settings
+    * For updating given user details in users table
+5. /deleteuser
+    * For removing user from users table
+6. /browse
+    * For displaying a list of all items in a shop.
+7. /browse/:itemName
+    * For displaying information about one searched item by name from items table.
+8. /cart
+    * For cheching what items user has in his cart.
+9. /cart/additem
+    * For adding an item to a cart with given quantity.
+10. /cart/removeitem
+    * For removing cart_item from user cart.
+11. /cart/changeqty
+    * For changing cart_item table quantity by name with given amount.
+12. /cart/clear
+    * For clearing all cart_item in current user cart.
+13. /cart/checkout
+    * For checkout user cart, generate order to be dispatched.
+14. /cart/:cartId
+    * For viewing searched cart_item in cart.
+15. /orders
+    * For viewing all user orders.
 
-
-
+Since this is a simple REST API, any products selling company could have a use of it, let it be clothes, food shop selling groceries, gym company selling their plans as items, domains company seeling domains as items etc...
 ![E-Commerce ERD image](images/ecommerceERD.png)
 
 
@@ -33,7 +62,7 @@ This project became alive because Me and Sironi had to create an API E-Commerce 
         * Type in 'npm start' or 'npm start --force'.
         * Type 'localhost:3001' in your browser. Navigate to your local storage by clicking the right button on your opened browser, click 'inspect'. A window will pop up on your right hand side. On the top click a field called 'Application', on the left hand side find a field 'Local Storage'. Click on it and click also on to another field below called 'http://loalhost:3001/'. There are 'Key' and 'Value' columns. 
         * Copy all content from 'ecommerce.yaml' file that exists in this project and paste it into 'Value' column that has a 'Key' row 'swagger-editor-master'. 
-        * Then refresh your browser and you will be able to see a current document of this API.
+        * Then refresh your browser and you will be able to see a current document of this REST API.
     
     
     * If useing any other application editor follow instructions below:
@@ -41,7 +70,7 @@ This project became alive because Me and Sironi had to create an API E-Commerce 
         * Must start 'swagger-editor-master' file to be able to view this document in your browser.
         * If manage to start it, then 
         copy all content from 'ecommerce.yaml' file that exists in this project and paste it into your browser 'Local storage' 'Value' that has a 'Key' called 'swagger-editor-master'.
-        * Refresh your browser and you suppose to be able to see a current document of this API.
+        * Refresh your browser and you suppose to be able to see a current document of this REST API.
 
 ### Technologies ###
 
@@ -49,7 +78,7 @@ This project became alive because Me and Sironi had to create an API E-Commerce 
 <br>Me and Sironi decided that PostgreSQL tool called pgAdmin will be the best choise for us because it is the most advanced Open Source database in the world.
 <br>Postman tool was used for testing our routes, request bodys and responses.
 <br>Our ERD is built with help from lucid visual collaboration website.
-<br>We used Swagger editor for documenting our API, because it is a great tool for building and documenting API's, free, easy to use, popular in web development enviroment.
+<br>We used Swagger editor for documenting our REST API, because it is a great tool for building and documenting API's, free, easy to use, popular in web development enviroment.
 <br>
 <br>[Postman page](www.postman.com)
 <br>[Lucid page](www.lucidchart.com)
