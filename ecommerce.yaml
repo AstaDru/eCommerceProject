@@ -662,6 +662,7 @@ components:
           example: 2
       xml:
         name: cart_items
+        
   securitySchemes:
     sessionAuth:
       type: apiKey
