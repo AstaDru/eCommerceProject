@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS shop
     name character varying(50),
     email character varying(50),
     phone_nr integer,
-    address_id integer,
+    address character varying(50),
     capital integer
 );
 
