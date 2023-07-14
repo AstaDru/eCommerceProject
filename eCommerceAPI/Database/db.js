@@ -72,8 +72,8 @@ const getUserByEmail = (request, response) => {
 
 const setUserAtr = (request, response) => {
     // Change attribute about user in db 
-    const setAttribute = (request.body.attribute)? request.body.attribute.toLowerCase(): null;
-    const newValue = (request.body[setAttribute])? request.body[setAttribute]: null;
+    const { attribute, value } = request.body;
+
     // default values matching users db column names
     const userAttributes = {
         name: 'name',
@@ -82,10 +82,10 @@ const setUserAtr = (request, response) => {
         password: 'password',
         address: 'address'
     }
-    if (userAttributes[setAttribute] && newValue) {
+    if (userAttributes[attribute] && value) {
         const values = [newValue, request.session.user.id];
         // I was unable to pass userAtr[setAtr] as part of the Values array, Hence string literal
-        pool.query(`UPDATE users SET ${userAttributes[setAttribute]} = $1 WHERE id = $2 RETURNING *`, values, (err, results)=>{
+        pool.query(`UPDATE users SET ${userAttributes[attribute]} = $1 WHERE id = $2 RETURNING *`, [values], (err, results)=>{
             if (err) {
                 response.status(400).json({message: err.message, detail: err.detail, ...err})
             }
@@ -93,7 +93,8 @@ const setUserAtr = (request, response) => {
                 response.status(404).json({message: "User not found"})
             }
             else {
-                response.json({message: "Update successful",...results.rows[0]})
+                // response.json({message: "Update successful",...results.rows[0]}) # this would reveal the user's data
+                response.json({message: `Update successful on ${attribute}`})
             }
         })
     } else {
@@ -230,7 +231,6 @@ const clearCart = (request, response) => {
 };
 
 const changeCartItemQuantityByName = (request, response) => {
-    // UPDATE SCHEMA cart_item.item_id Must be UINQUE
     const { itemName, quantity } = request.body;
 
     if (quantity == 0){
