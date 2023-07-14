@@ -28,28 +28,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                  format: varchar
-                  example: 'Larry'
-                surname:
-                  type: string
-                  format: varchar
-                  example: 'Smiles'
-                email:
-                  type: string
-                  format: varchar
-                  example: 'smiles@smiles.com'
-                password:
-                  type: string
-                  format: varchar
-                  example: 'pass3'
-                address:
-                  type: string
-                  format: varchar
-                  example: '78 Wally Street QRT9 8WQ'
+              $ref: '#/components/schemas/users'
       responses:
         '200':
           description: 'Registration was successful'
@@ -94,7 +73,7 @@ paths:
     description: 'authenticates user by given email and password details that are in db.users table'
     post:
       summary: post login details
-      description: 'authenticates user by given email and password details that are in db.users table'
+      description: 'uses email and password compares entered password with password in db.users'
       operationId: login
       requestBody:
         description: 'Use email and password to login'
@@ -179,7 +158,7 @@ paths:
     put:
       summary: put update user details
       description: >-
-              updates user in db.users table given attribute value with passed new information within the setAttribute value
+              updates user info given attribute which has to match with the users schema column head and not id and set it to the value passed in
       operationId: settings
       requestBody:
         description: 'Use given attribute and setAttribute to update current session user details in db.users table'
@@ -192,7 +171,7 @@ paths:
                   type: string
                   format: varchar
                   example: 'name'
-                setAttribute:
+                value: # changed db.js code @line:75 to reflect <
                   type: string
                   format: varchar
                   example: 'Holly'
@@ -202,7 +181,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/users'
+                # $ref: '#/components/schemas/users' ## user data leak
                 type: object
                 properties:
                   message:
@@ -210,7 +189,6 @@ paths:
                     format: varchar
                     example: 'Update successful'
                    
-                    
         '400':
           description: 'Update unsuccessful'
           content:
@@ -247,7 +225,7 @@ paths:
     description: ' Deletes user by user id of current user session from db.user table'
     delete:
       summary: delete user
-      description: Deletes user by user id of current user session
+      description: uses id stored in req.session.user.id to delete the current user from db.users
       operationId: deleteUser
       responses:
         '204':
@@ -278,10 +256,10 @@ paths:
         - users
   /browse:
     summary: get items array
-    description: 'returns a list of all items information  that shop is holding from db.items table.'
+    description: 'returns a list of all items information that shop is holding from db.items table.'
     get:
       summary: get all items
-      description: 'returns a list of all items information  that shop is holding from db.items table.'
+      description: returns a list with all items in a shop
       operationId: browse
       responses:
         '200':
@@ -304,7 +282,6 @@ paths:
                     type: string
                     format: varchar
                     example: 'Error message'
-        
       tags:
         - browse
   /browse/{name}:
@@ -318,7 +295,7 @@ paths:
         - name: name
           in: path
           required: true
-          description: 'item name in the db.items table'
+          description: 'The name of an item that is already in the db.items'
           schema:
             type: string
             example: 'apple'
@@ -400,14 +377,27 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/cart_items'
+              type: object
+              properties:
+                itemName:
+                  type: string
+                  format: varchar
+                  example: 'apple'
+                quantity:
+                  type: integer
+                  example: 20
+                  
       responses:
         '200':
           description: Default error sample response
           content:
             application/json:
                 schema:
-                  $ref: '#/components/schemas/items'
+                  $ref: '#/components/schemas/cart_items'
+        '400':
+          description: Invalid values 
+        '404':
+          description: Error
       tags:
         - cart
   /cart/changeqty:
@@ -417,9 +407,31 @@ paths:
       summary: put update cart item quantity
       description: 'Set new quantity of item in cart '
       operationId: changeQty
+      requestBody:
+        description: Take an item name and quantity
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                itemName:
+                  type: string
+                  format: varchar
+                  example: 'apple'
+                quantity:
+                  type: integer
+                  example: 30
       responses:
-        default:
+        '200':
           description: Default error sample response
+          content:
+            application/json:
+                schema:
+                  $ref: '#/components/schemas/cart_items'
+        '400':
+          description: Invalid values 
+        '404':
+          description: Error
       tags:
         - cart
   /cart/removeitem:
@@ -429,9 +441,25 @@ paths:
       summary: delete cart item
       description: 'remove an item from users cart '
       operationId: removeItem
+      requestBody:
+        description: Requires itemName
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                itemName:
+                  type: string
+                  format: varchar
+                  example: 'apple'
+                  
       responses:
-        default:
-          description: Default error sample response
+        '204':
+          description: No content - Item scuccefully removed from cart
+        '400':
+          description: Invalid values 
+        '404':
+          description: Error
       tags:
         - cart
   /cart/clear:
@@ -442,8 +470,10 @@ paths:
       description: removes all items in a cart
       operationId: clear
       responses:
-        default:
-          description: Default error sample response
+        '204':
+          description: all Cart items have been succefully deleted
+        '400':
+          description: Error
       tags:
         - cart
   /cart/checkout:
@@ -451,11 +481,19 @@ paths:
     description: makes an order with all current cart items, returning the order id
     get:
       summary: get generated order for checkout
-      description: makes an order with all current cart items, returning the order id
+      description: sets the current user cart to completed and calculates the total price and quantity, The db will then automatically generate a new empty cart for user
       operationId: checkout
       responses:
-        default:
-          description: Default error sample response
+        '200':
+          description: the status is set to completed with a message to the user about their address and delivery date
+          content:
+            application/json:
+                schema:
+                  $ref: '#/components/schemas/orders'
+        '400':
+          description: No content
+        '404':
+          description: Error
       tags:
         - cart
   /orders:
@@ -509,7 +547,7 @@ paths:
         - orders
 components:
   schemas:
-    users:
+    users: # Moved Larry to schemas/users/example
       type: object
       properties:
         id:
@@ -519,23 +557,23 @@ components:
         name:
           type: string
           format: varchar(50)
-          example: john
+          example: 'Larry'
         surname:
           type: string
           format: varchar(50)
-          example: Doe
+          example: 'Smiles'
         email:
           type: string
           format: varchar(50)
-          example: john@doe.com
+          example: 'smiles@smiles.com'
         password:
           type: string
           format: varchar(50)
-          example: secret123
+          example: 'pass3'
         address:
           type: string
           format: varchar(50)
-          example: '22 Jump str'
+          example: '78 Wally Street QRT9 8WQ'
       xml:
         name: users
     items:
@@ -551,6 +589,10 @@ components:
         quantity:
           type: integer
           example: 50
+        description:
+          type: string
+          format: varchar
+          example: 'The spherical fruit commonly red, green or red n yellow'
       xml:
         name: items
     orders:
