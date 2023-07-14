@@ -5,7 +5,7 @@ info:
     'A CodeCademy API project built using NodeJS, PostgreSQL, express, express-session, dot-env'
   version: 1.0.0
 servers:
-  - url: localhost:PORT/api
+  - url: localhost:3000/api
 tags:
   - name: users
     description: Operations about users
@@ -20,6 +20,7 @@ paths:
     summary: post new user
     description: 'Creates new user account with given details and adds it to a db.users table '
     post:
+      security: []
       summary: post create user account
       description: 'Creates new user account with given details and adds it to a db.users table'
       operationId: register
@@ -32,6 +33,12 @@ paths:
       responses:
         '200':
           description: 'Registration was successful'
+          headers:
+            session:
+              description: set the session to authenticated and adds  values to user object
+              schema:
+                type: object
+                example: request.session.authenticated = true;
           content:
             application/json:
               schema:
@@ -93,6 +100,12 @@ paths:
       responses:
         '200':
           description: 'Login successful'
+          headers:
+            session:
+              description: set the session to authenticated and adds  values to user object
+              schema:
+                type: object
+                example: request.session.authenticated = true;
           content:
             application/json:
               schema:
@@ -148,6 +161,12 @@ paths:
       responses:
         '204':
           description: 'No content'
+          headers: 
+            express-session:
+              description: sets session to null, which clears all stored session values
+              schema: 
+                type: object
+                example: request.session = null;
       tags:
         - users
           
@@ -222,7 +241,7 @@ paths:
         - users
   /deleteuser:
     summary: delete user account
-    description: ' Deletes user by user id of current user session from db.user table'
+    description: 'Deletes user by user id of current user session from db.user table'
     delete:
       summary: delete user
       description: uses id stored in req.session.user.id to delete the current user from db.users
@@ -258,6 +277,7 @@ paths:
     summary: get items array
     description: 'returns a list of all items information that shop is holding from db.items table.'
     get:
+      security: []
       summary: get all items
       description: returns a list with all items in a shop
       operationId: browse
@@ -288,6 +308,7 @@ paths:
     summary: get item by name
     description: 'returns searched item by name that was passed as a url param from db.items'
     get:
+      security: []
       summary: get item
       description: returns searched item by name that was passed as a url param from db.items
       operationId: browse_name
@@ -516,7 +537,7 @@ paths:
         - orders
   /orders/{id}:
     summary: get item by name
-    description: ' Returns an item object by {name} which is passed as a url param'
+    description: 'Returns an item object by {name} which is passed as a url param'
     get:
       summary: view items in an order by id
       description: uses {id} to select any cart that belongs to user 
@@ -641,3 +662,12 @@ components:
           example: 2
       xml:
         name: cart_items
+        
+  securitySchemes:
+    sessionAuth:
+      type: apiKey
+      in: cookie
+      name: express-session
+  
+security:
+  - sessionAuth: []

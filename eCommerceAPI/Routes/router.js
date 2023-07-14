@@ -44,15 +44,18 @@ const isAuthenticated = (req, res, next) => {
 }
 
 const endSession = (req, res) => {
-    req.session = null;
-    res.redirect('/api/browse');
+    // destroys the current user session
+    req.session.destroy((err) => {
+        if (err) throw Error(err);
+        res.redirect('/api/browse');
+    })
 };
 
 apiRouter.post('/register', createUser);
 
 apiRouter.post('/login', getUserByEmail);
 
-apiRouter.get('/logout', endSession);
+apiRouter.get('/logout', isAuthenticated, endSession);
 
 apiRouter.put('/settings', isAuthenticated, setUserAtr);
 

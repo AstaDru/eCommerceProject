@@ -32,7 +32,7 @@ const createUser =  (request, response) => {
             const { id, name, surname, email, address } = results.rows[0];
             request.session.user = {id, name, surname, email, address};
 
-            response.json({message: "User Created", name, surname, email});
+            response.status(201).json({message: "User Created", name, surname, email});
             //response.redirect('/api/browse');
         } else {
             response.status(400).json({message: err.message,  ...err})
@@ -178,6 +178,9 @@ const addToCartByName = async (request, response) => {
     if (itemName && quantity) {
         // Async check quantity
         const { rows } = await pool.query('SELECT * FROM items WHERE name = $1', [itemName]);
+        if (!rows[0]) {
+            return response.status(404).json({message: "Item not found in db.items"})
+        }
         if (rows[0].quantity - quantity < 0) {
             return response.status(404).json({message: `The shop doesn't have enough ${itemName}: ${rows[0].quantity} Available `})
         }  
@@ -283,7 +286,7 @@ const getOrders = (request, response) => {
             response.status(400).json({message: err.message, detail: err.detail, ...err})
         } 
         else if (results.rows.length == 0) {
-            response.json({message: 'No content found'});
+            response.status(404).json({message: 'No content found'});
         } else {
             response.send(results.rows);
         }
