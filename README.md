@@ -3,7 +3,7 @@
 
 ## Project Description ##
 
-This project became alive because Me and Sironi had to create an REST API E-Commerce project from our Web Development course. With this in mind we have decided to build a shop. Our first step was to design ERD that made our project to go smoother with visualising how our code suppose to be implemented. Accordingly to our ERD below there are shop, items, cart_items, users and orders tables.Routes avaliable:
+This project became alive because Me and Sironi had to create a REST API E-Commerce project from our Web Development course. With this in mind we have decided to build a shop. Our first step was to design ERD that made our project to go smoother with visualising how our code suppose to be implemented. Accordingly to our ERD below there are shop, items, cart_items, users and orders tables.Routes avaliable:
 1. /register
     * For creating new user account. Adding all given information to users table.
 2. /login
@@ -36,6 +36,7 @@ This project became alive because Me and Sironi had to create an REST API E-Comm
     * For viewing all user orders.
 
 Since this is a simple REST API, any products selling company could have a use of it, let it be clothes, food shop selling groceries, gym company selling their plans as items, domains company seeling domains as items etc...
+
 ![E-Commerce ERD image](images/ecommerceERD.png)
 
 

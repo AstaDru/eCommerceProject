@@ -328,12 +328,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/items'
-                type: object
-                properties:
-                  message:
-                    type: string
-                    format: varchar
-                    example: 'found item ...'
+                
                     
         '400':
           description: 'Could not get items fron db.items table'
@@ -458,7 +453,7 @@ paths:
   /cart/removeitem:
     summary: deletes a single item from cart
     description: removes item from a cart by name
-    delete:
+    post:
       summary: delete cart item
       description: 'remove an item from users cart '
       operationId: removeItem
@@ -473,10 +468,24 @@ paths:
                   type: string
                   format: varchar
                   example: 'apple'
-                  
+                
       responses:
-        '204':
-          description: No content - Item scuccefully removed from cart
+        '200':
+          description: Item scuccefully removed from cart       
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    format: varchar
+                    example: 'Item scuccefully removed'
+                  itemName:
+                    type: string
+                    format: varchar
+                    example: 'apple'  
+      
         '400':
           description: Invalid values 
         '404':
