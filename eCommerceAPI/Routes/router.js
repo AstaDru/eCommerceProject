@@ -69,7 +69,7 @@ apiRouter.get('/cart', isAuthenticated, getCartsByUser);
 
 apiRouter.post('/cart/additem', isAuthenticated, addToCartByName)
 
-apiRouter.delete('/cart/removeitem', isAuthenticated, removeFromCartByName)
+apiRouter.post('/cart/removeitem', isAuthenticated, removeFromCartByName)
 
 apiRouter.put('/cart/changeqty', isAuthenticated, changeCartItemQuantityByName)
 

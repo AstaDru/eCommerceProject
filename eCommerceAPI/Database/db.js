@@ -211,7 +211,7 @@ const removeFromCartByName = (request, response) => {
     const { itemName} = request.body
 
     if (itemName) {
-            pool.query("DELETE FROM cart_items WHERE item_name = $1::text AND order_id = (SELECT id FROM orders  WHERE status = 'current' AND user_id = $2)::text RETURNING item_name", [ itemName, request.session.user.id] , (err, results) => {
+            pool.query("DELETE FROM cart_items WHERE item_name = $1::text AND order_id = (SELECT id FROM orders  WHERE status = 'current' AND user_id = $2::text)::text RETURNING item_name", [ itemName, request.session.user.id] , (err, results) => {
             if (err) {
                 response.status(400).json({message: err.message, detail: err.detail, ...err})
             } else if (results.rows.length <= 0) {
