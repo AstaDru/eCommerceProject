@@ -59,7 +59,8 @@ Since this is a simple REST API, any products selling company could have a use o
 4. To view it on your browser window:
 
     * If you are useing Visual Studio Code follow instructions below:
-        * To view a document of this API go to your terminal, make sure you are in 'swagger-editor-master' folder.
+        * To view a document of this API download [this swagger folder](https://swagger.io/tools/swagger-editor/download/).
+        * Type in 'npm install'.
         * Type in 'npm start' or 'npm start --force'.
         * Type 'localhost:3001' in your browser. Navigate to your local storage by clicking the right button on your opened browser, click 'inspect'. A window will pop up on your right hand side. On the top click a field called 'Application', on the left hand side find a field 'Local Storage'. Click on it and click also on to another field below called 'http://loalhost:3001/'. There are 'Key' and 'Value' columns. 
         * Copy all content from 'ecommerce.yaml' file that exists in this project and paste it into 'Value' column that has a 'Key' row 'swagger-editor-master'. 
@@ -68,7 +69,7 @@ Since this is a simple REST API, any products selling company could have a use o
     
     * If useing any other application editor follow instructions below:
         * You will have to follow your application editor commands to be able to view this document API.
-        * Must start 'swagger-editor-master' file to be able to view this document in your browser.
+        * Must download and start 'swagger-editor-master' file to be able to view this document in your browser.
         * If manage to start it, then 
         copy all content from 'ecommerce.yaml' file that exists in this project and paste it into your browser 'Local storage' 'Value' that has a 'Key' called 'swagger-editor-master'.
         * Refresh your browser and you suppose to be able to see a current document of this REST API.
