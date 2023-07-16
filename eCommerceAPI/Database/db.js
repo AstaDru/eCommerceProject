@@ -7,6 +7,7 @@ require('dotenv').config(); // https://www.freecodecamp.org/news/how-to-use-node
 const pgHOST = process.env.pgHOST;
 const pgUSER = process.env.pgUSER
 const pgPASSWORD = process.env.pgPASSWORD;
+const pgDATABASE = process.env.pgDATABASE;
 
 if (!pgHOST || !pgUSER || !pgPASSWORD) {
     // Prevents connection if HOST, USER, PASSWORD are not set
@@ -17,7 +18,7 @@ const pool = new Pool({
     host: pgHOST,
     user: pgUSER,
     password: pgPASSWORD,
-    database: 'shop',
+    database: pgDATABASE,
     port: 5432
 });
 
