@@ -56,37 +56,40 @@ base url: `localhost:3000/api`
 > | /orders | GET | For viewing all user orders. |
 
 ## ERD SCHEMA
-![E-Commerce ERD image](images/ecommerceERD.png)
+![E-Commerce ERD image](images/ecommerceERD.png)<br>
 Since this is a simple REST API, any products selling company could have a use of it, let it be clothes, food shop selling groceries, gym company selling their plans as items, domains company selling domains as items etc...
 
 
-### Instructions
+
+## Instructions
 #### Tips:
-- I would suggest to use "Visual Studio Code" editor. This software is free and easy to use. Link to download: [Visual Studio Site](https://code.visualstudio.com/download). It has instrutions of how to install this software on your computer, laptop or any other device that you use. There are different installation options for windows and mac users. Just visit this site and you will find all information that you need to be able to install this software and use it.
-- More information about other great editors that are out there visit [links to editors](https://toolbox.hashnode.com/35-best-free-code-editors).
+1.   I would suggest to use "Visual Studio Code" editor. This software is free and easy to use. Link to download: [Visual Studio Site](https://code.visualstudio.com/download). It has instrutions of how to install this software on your computer, laptop or any other device that you use. There are different installation options for windows and mac users. Just visit this site and you will find all information that you need to be able to install this software and use it.
+2. More information about other great editors that are out there visit [links to editors](https://toolbox.hashnode.com/35-best-free-code-editors).
 
 3. Use any suggestion from options below.
+- Download this file, extract, save it in your computer and add it to your code editor.
+- Copy this code repository and add it to your editor to view it.
 - Create seperate files in your code editor, copy code snapshots from this file and paste it to your code editor.
 
 4. To view it on your browser window:
-- If you are useing Visual Studio Code follow instructions below:
-- To view a document of this API go to your terminal, make sure you are in 'swagger-editor-master' folder.
-- Type in 'npm start' or 'npm start --force'.
-- Type 'localhost:3001' in your browser. Navigate to your local storage by clicking the right button on your opened browser, click 'inspect'. A window will pop up on your right hand side. On the top click a field called 'Application', on the left hand side find a field 'Local Storage'. Click on it and click also on to another field below called 'http://loalhost:3001/'. There are 'Key' and 'Value' columns.
+- #### If you are useing Visual Studio Code follow instructions below:
+    - To view a document of this API go to your terminal, make sure you are in 'swagger-editor-master' folder.
+    - Type in 'npm start' or 'npm start --force'.
+    - Type 'localhost:3001' in your browser. Navigate to your local storage by clicking the right button on your opened browser, click 'inspect'. A window will pop up on your right hand side. On the top click a field called 'Application', on the left hand side find a field 'Local Storage'. Click on it and click also on to another field below called 'http://loalhost:3001/'. There are 'Key' and 'Value' columns.
 
-- Copy all content from 'ecommerce.yaml' file that exists in this project and paste it into 'Value' column that has a 'Key' row 'swagger-editor-master'.
+    - Copy all content from 'ecommerce.yaml' file that exists in this project and paste it into 'Value' column that has a 'Key' row 'swagger-editor-master'.
 
-- Then refresh your browser and you will be able to see a current document of this REST API.
+    - Then refresh your browser and you will be able to see a current document of this REST API.
 
-- If useing any other application editor follow instructions below:
+ - #### If useing any other application editor follow instructions below:
 
-- You will have to follow your application editor commands to be able to view this document API.
+    - You will have to follow your application editor commands to be able to view this document API.
 
-- Must start 'swagger-editor-master' file to be able to view this document in your browser.
+    - Must start 'swagger-editor-master' file to be able to view this document in your browser.
 
-- If manage to start it, then copy all content from 'ecommerce.yaml' file that exists in this project and paste it into your browser 'Local storage' 'Value' that has a 'Key' called 'swagger-editor-master'.
+    - If manage to start it, then copy all content from 'ecommerce.yaml' file that exists in this project and paste it into your browser 'Local storage' 'Value' that has a 'Key' called 'swagger-editor-master'.
 
-### Technologies ###
+## Technologies
 
 ### External Tool
 Me and Sironi decided that PostgreSQL tool called [pgAdmin](https://www.pgadmin.org/) will be the best choice for us because it is the most advanced Open Source database.
@@ -104,10 +107,10 @@ Me and Sironi decided that PostgreSQL tool called [pgAdmin](https://www.pgadmin.
 ### Collaborators
 _Sironi invested a lot of time to create this project with me. He had great ideas that we put together and added to this project._
 
-_Astra has shown that she can develop products of great quality given the right tools and team, I felt like i was bringing her concepts to life. Thank you_
+_Asta has shown that she can develop products of great quality given the right tools and team, I felt like i was bringing her concepts to life. Thank you_
 
-_This is a product of [Astra](https://github.com/AstaDru) and [Sironi](https://github.com/Sironi-00)'s hard work, and has helped us further learn about the greatness and stress for web development. "Many little components combine to form one great structure" and this project has made use feel closer to our goals._
+_This is a product of [Asta](https://github.com/AstaDru) and [Sironi](https://github.com/Sironi-00)'s hard work, and has helped us further learn about the greatness and stress for web development. "Many little components combine to form one great structure" and this project has made use feel closer to our goals._
 
-### License
+## License
 - This project is under MIT license.
 - [More about this license](https://mit-license.org/)
